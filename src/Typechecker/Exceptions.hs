@@ -6,3 +6,6 @@ type Pos = BNFC'Position
 
 data TypecheckingException
   = TypeMismatchException Pos IType IType
+
+instance Show TypecheckingException where
+  show = undefined

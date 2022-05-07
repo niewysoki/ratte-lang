@@ -6,17 +6,15 @@ import           Evaluator.Exceptions
 import           Evaluator.Memory
 import           Evaluator.Monads
 import           Generated.Syntax
+import Common.BuiltIn
 
 eval :: Program -> IO (Either RuntimeException Value)
 eval = runExceptT . flip evalStateT emptyMemory . evalM
 
-entrypoint :: BNFC'Position -> Expr' BNFC'Position
-entrypoint pos = EApp pos (Ident "Main") []
-
 instance Eval Program where
   evalM (PProgram pos inits) = do
     mapM_ evalM inits
-    evalM $ entrypoint pos
+    evalM $ EApp pos entrypointId []
 
 instance Eval Init where
   evalM (IFn _ id args _ block) = do
@@ -79,7 +77,7 @@ instance Eval Stmt where
   evalM loop@(SWhile _ cond block) = guardReturn $ do
     (ValBool x) <- evalM cond
     preserveEnv $ if x then do evalM block >> evalM loop else return ValEmpty
-    
+
   evalM (SExp _ exp) = guardReturn $ evalM exp
 
 instance Eval Expr where
@@ -90,10 +88,10 @@ instance Eval Expr where
 
   evalM (ENeg _ exp)  = do
     (ValInt x) <- evalM exp
-    return . ValInt . negate $ x
+    return . ValInt $ negate x
   evalM (ENot _ exp)  = do
     (ValBool x) <- evalM exp
-    return . ValBool . not $ x
+    return . ValBool $ not x
 
   evalM (ERel _ exp1 (OLTH _) exp2)   = evalIntToBoolOp (<) exp1 exp2
   evalM (ERel _ exp1 (OLE _) exp2)    = evalIntToBoolOp (<=) exp1 exp2
@@ -107,13 +105,30 @@ instance Eval Expr where
   evalM (EAdd _ exp1 (OMinus _) exp2) = evalIntToIntOp (-) exp1 exp2
   evalM (EMul _ exp1 (OTimes _) exp2) = evalIntToIntOp (*) exp1 exp2
   evalM (EMul _ exp1 (OMod _) exp2)   = evalIntToIntOp mod exp1 exp2
+  evalM (EVar _ name)                 = gets (getValue name)
+  evalM (ELambda _ args _ block)      = gets (ValFunction args block . env)
   evalM (EMul p exp1 (ODiv _) exp2)   = do
     (ValInt x2) <- evalM exp2
     if x2 == 0 then throwError $ DivideByZeroE p else evalIntToIntOp quot exp1 exp2
 
-  evalM (EVar _ name) = gets (getValue name)
-  evalM (ELambda _ args _ block) = gets (ValFunction args block . env)
-  evalM (EApp _ id args) = undefined
+  evalM (EApp _ id argExps) = guardBuiltIn argExps id $ do
+    mem <- get
+    argVals <- mapM evalM argExps
+    -- argLocs <-
+
+    let env' = env mem
+    let fun@(ValFunction funArgs funBlock funEnv) = getValue id mem
+    modify $ putEnv funEnv
+    modify $ putValue id fun
+    modify $ putValue retId ValEmpty
+
+    --mapM_
+
+    evalM funBlock
+
+    let val = getValue retId mem
+    modify $ putEnv env'
+    return val
 
 
 evalValToBoolOp :: (Value -> Value -> Bool) -> Expr -> Expr -> EvalM
@@ -145,9 +160,14 @@ guardReturn computation = do
   ret <- gets $ (== ValEmpty) . getValue retId
   if ret then return ValEmpty else computation
 
+guardBuiltIn :: [Expr] -> Ident -> EvalM -> EvalM
+guardBuiltIn argExps id computation = if isBuiltIn id
+  then mapM evalM argExps >>= evalBuiltIn id
+  else computation
+
 preserveEnv :: EvalM -> EvalM
 preserveEnv computation = do
   env' <- gets env
   computation
-  modify $ \m -> m {env = env'}
+  modify $ putEnv env'
   return ValEmpty

@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 
-module Typechecker.Typechecker where
+module Typechecker.Typechecker (typecheck) where
 
 import           Control.Monad.Except
 import           Control.Monad.State
@@ -8,10 +8,11 @@ import           Generated.Syntax
 import           Typechecker.Exceptions
 import           Typechecker.Monads
 import           Typechecker.Persistence
-import Typechecker.Types (IType(..), Mutability (..))
+import           Typechecker.Types
 
-typecheck :: Program -> Either TypecheckingException ()
-typecheck p = runExcept (evalStateT (checkM Nothing p) emptyEnv)
+typecheck :: Program -> Either TypecheckingException Program
+typecheck p = Right p
+-- typecheck p = runExcept (evalStateT (checkM Nothing p) emptyEnv)
 
 instance Checker Program where
   checkM _ (PProgram position inits) = undefined
@@ -28,7 +29,7 @@ instance Checker Init where
     checkM (Just retT) block
     env' <- get
     let hasret = hasReturn env'
-    
+
     put env
 
   checkM _ (IVar pos id t exp) = do
@@ -42,21 +43,20 @@ instance Checker Block where
 instance Checker Stmt where
   checkM = undefined
 
-instance Getter Expr where
-  getM (ELitInt _ _) = return $ IInt Imm
-  getM (ELitTrue _) = return $ IBool Imm
-  getM (ELitFalse _) = return $ IBool Imm
-  getM (EString _ _) = return $ IStr Imm
+-- instance Getter Expr where
+--   getM (ELitInt _ _) = return $ IInt
+--   getM (ELitTrue _) = return $ IBool
+--   getM (ELitFalse _) = return $ IBool Imm
+--   getM (EString _ _) = return $ IStr Imm
 
-  getM (ENeg pos exp) = undefined
+--   getM (ENeg pos exp) = undefined
 
-  getM _ = undefined
+--   getM _ = undefined
 
-typesEqualOrThrowM pos t exp = do
-  expT <- getM exp
-  
 
-  
+
+
+
 
 assertTypeOrThrowM expectedType actualType = assertOrThrowM isValidType
   where
