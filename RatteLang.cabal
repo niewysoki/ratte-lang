@@ -22,7 +22,21 @@ maintainer:         franciszek.hnatow@gmail.com
 extra-source-files: CHANGELOG.md
 
 library ratte
-  exposed-modules: Interpreter
+  exposed-modules:
+    Interpreter
+    Common.BuiltIn
+    Evaluator.Evaluator
+    Evaluator.Exceptions
+    Evaluator.Memory
+    Evaluator.Monads
+    Generated.Lexer
+    Generated.Parser
+    Generated.Syntax
+    Typechecker.Exceptions
+    Typechecker.Monads
+    Typechecker.Persistence
+    Typechecker.Typechecker
+    Typechecker.Types
   hs-source-dirs:
     src
   build-depends:

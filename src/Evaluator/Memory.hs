@@ -1,4 +1,5 @@
-module Evaluator.Memory (Value(..), Memory(..), emptyMemory, getValue, putValue, updateValue, retId, entrypointId, putEnv) where
+{-# LANGUAGE RecordWildCards #-}
+module Evaluator.Memory (Value(..), Memory, emptyMemory, getValue, putValue, updateValue, retId, entrypointId, putEnv, getEnv) where
 
 import qualified Data.Map         as M
 import           Generated.Syntax
@@ -18,38 +19,41 @@ instance Eq Value where
   _ == _ = False
 
 type Loc = Int
+type Env = M.Map Ident Loc
+type Store = M.Map Loc Value
 
-newtype Env = Env {_env :: M.Map Ident Loc}
-
-data Store = Str
-  { _store   :: M.Map Loc Value
+data Memory = Mem
+  { _env     :: Env
+  , _store   :: Store
   , _nextLoc :: Loc
   }
 
-data Memory = Mem
-  { env   :: Env
-  , store :: Store
-  }
-
 emptyMemory :: Memory
-emptyMemory = Mem emptyEnv emptyStore where
-  emptyEnv = Env M.empty :: Env
-  emptyStore = Str M.empty 0 :: Store
+emptyMemory = Mem M.empty M.empty 0
 
+retId, entrypointId :: Ident
 retId = Ident "return"
 entrypointId = Ident "Main"
 
 getValue :: Ident -> Memory -> Value
-getValue id mem = (_store . store $ mem) M.! getLoc id mem
-
-getLoc :: Ident -> Memory -> Loc
-getLoc id mem = (_env . env $ mem) M.! id
+getValue id mem = _store mem M.! getLoc id mem
 
 putValue :: Ident -> Value -> Memory -> Memory
-putValue id val mem = undefined
+putValue id val Mem{..} = Mem
+  { _env     = M.insert id _nextLoc _env
+  , _store   = M.insert _nextLoc val _store
+  , _nextLoc = _nextLoc + 1
+  }
 
 updateValue :: Ident -> Value -> Memory -> Memory
-updateValue id val mem = undefined
+updateValue id val mem = mem {_store = store'} where
+  store' = M.insert (getLoc id mem) val (_store mem)
 
 putEnv :: Env -> Memory -> Memory
-putEnv env' mem = mem {env = env'}
+putEnv env' mem = mem {_env = env'}
+
+getEnv :: Memory -> Env
+getEnv = _env
+
+getLoc :: Ident -> Memory -> Loc
+getLoc id mem = _env mem M.! id

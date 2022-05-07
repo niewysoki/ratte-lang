@@ -18,7 +18,7 @@ instance Eval Program where
 
 instance Eval Init where
   evalM (IFn _ id args _ block) = do
-    fun <- gets $ ValFunction args block . env
+    fun <- gets $ ValFunction args block . getEnv
     modify $ putValue id fun
     return ValEmpty
 
@@ -106,7 +106,7 @@ instance Eval Expr where
   evalM (EMul _ exp1 (OTimes _) exp2) = evalIntToIntOp (*) exp1 exp2
   evalM (EMul _ exp1 (OMod _) exp2)   = evalIntToIntOp mod exp1 exp2
   evalM (EVar _ name)                 = gets (getValue name)
-  evalM (ELambda _ args _ block)      = gets (ValFunction args block . env)
+  evalM (ELambda _ args _ block)      = gets (ValFunction args block . getEnv)
   evalM (EMul p exp1 (ODiv _) exp2)   = do
     (ValInt x2) <- evalM exp2
     if x2 == 0 then throwError $ DivideByZeroE p else evalIntToIntOp quot exp1 exp2
@@ -116,7 +116,7 @@ instance Eval Expr where
     argVals <- mapM evalM argExps
     -- argLocs <-
 
-    let env' = env mem
+    let env' = getEnv mem
     let fun@(ValFunction funArgs funBlock funEnv) = getValue id mem
     modify $ putEnv funEnv
     modify $ putValue id fun
@@ -167,7 +167,7 @@ guardBuiltIn argExps id computation = if isBuiltIn id
 
 preserveEnv :: EvalM -> EvalM
 preserveEnv computation = do
-  env' <- gets env
+  env' <- gets getEnv
   computation
   modify $ putEnv env'
   return ValEmpty
