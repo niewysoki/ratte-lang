@@ -8,7 +8,7 @@ data RuntimeException
   = DivideByZeroE Pos
   | UnkownE Pos
 
-prefix :: [Char]
+prefix :: String
 prefix = "RUNTIME EXCEPTION: "
 
 showP :: BNFC'Position -> String
