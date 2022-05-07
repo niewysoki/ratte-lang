@@ -1,5 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
-module Evaluator.Memory (Value(..), Memory, emptyMemory, getValue, putValue, updateValue, retId, entrypointId, putEnv, getEnv) where
+module Evaluator.Memory (Value(..), Memory, emptyMemory, getValue, putValue, updateValue, retId, entrypointId, putEnv, getEnv, _store) where
 
 import qualified Data.Map         as M
 import           Generated.Syntax
@@ -10,7 +10,7 @@ data Value
   | ValInt Integer
   | ValBool Bool
   | ValString String
-  | ValFunction [Arg] Block Env
+  | ValFunction [Arg] Block Env deriving Show
 
 instance Eq Value where
   ValInt x == ValInt x' = x == x'
@@ -26,7 +26,7 @@ data Memory = Mem
   { _env     :: Env
   , _store   :: Store
   , _nextLoc :: Loc
-  }
+  } deriving Show
 
 emptyMemory :: Memory
 emptyMemory = Mem M.empty M.empty 0

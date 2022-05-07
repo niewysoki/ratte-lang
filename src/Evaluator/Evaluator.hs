@@ -34,12 +34,14 @@ instance Eval Init where
 
 instance Eval Block where
   evalM (SBlock _ stmts) = do
+    env <- gets getEnv
     mapM_ evalM stmts
+    modify $ putEnv env
     return ValEmpty
 
 instance Eval Stmt where
   evalM (SEmpty _) = guardReturn $ return ValEmpty
-  evalM (SBStmt _ block) = guardReturn . preserveEnv $ evalM block
+  evalM (SBStmt _ block) = guardReturn $ evalM block
   evalM (SInit _ init) = guardReturn $ evalM init
 
   evalM (SAss _ id exp) = guardReturn $ do
@@ -68,15 +70,15 @@ instance Eval Stmt where
 
   evalM (SCond _ cond block) = guardReturn $ do
     (ValBool x) <- evalM cond
-    preserveEnv $ if x then evalM block else return ValEmpty
+    if x then evalM block else return ValEmpty
 
   evalM (SCondElse _ cond block block') = guardReturn $ do
     (ValBool x) <- evalM cond
-    preserveEnv . evalM $ if x then block else block'
+    if x then evalM block else evalM block'
 
   evalM loop@(SWhile _ cond block) = guardReturn $ do
     (ValBool x) <- evalM cond
-    preserveEnv $ if x then do evalM block >> evalM loop else return ValEmpty
+    if x then do evalM block >> evalM loop else return ValEmpty
 
   evalM (SExp _ exp) = guardReturn $ evalM exp
 
@@ -165,9 +167,3 @@ guardBuiltIn argExps id computation = if isBuiltIn id
   then mapM evalM argExps >>= evalBuiltIn id
   else computation
 
-preserveEnv :: EvalM -> EvalM
-preserveEnv computation = do
-  env' <- gets getEnv
-  computation
-  modify $ putEnv env'
-  return ValEmpty
