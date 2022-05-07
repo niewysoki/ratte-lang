@@ -1,9 +1,9 @@
 all:
-		cabal build
+	cabal build
 
 install:
-		cabal install --install-method=copy --installdir=./ --overwrite-policy=always
+	cabal install --install-method=copy --installdir=./ --overwrite-policy=always
 
 clean:
-		cabal clean
-		rm interpreter
+	cabal clean
+	rm interpreter
