@@ -26,7 +26,10 @@ library ratte
   hs-source-dirs:
     src
   build-depends:
-    base >=4.10 && <5
+    base >=4.10 && <5,
+    containers,
+    mtl,
+    array
   default-language: Haskell2010
 
 
@@ -39,8 +42,11 @@ executable interpreter
   -- LANGUAGE extensions used by modules in this package.
   -- other-extensions:
   build-depends:
-    base >=4.10 && <5
-    , ratte
+    base >=4.10 && <5,
+    ratte,
+    containers,
+    mtl,
+    array
   hs-source-dirs:
     app
   default-language: Haskell2010
