@@ -17,6 +17,7 @@ instance Eq Value where
   ValInt x == ValInt x' = x == x'
   ValBool x == ValBool x' = x == x'
   ValString x == ValString x' = x == x'
+  ValEmpty == ValEmpty = True
   _ == _ = False
 
 type Loc = Int
@@ -32,10 +33,6 @@ data Memory = Mem
 
 emptyMemory :: Memory
 emptyMemory = Mem M.empty M.empty 0
-
-isEmptyVal :: Value -> Bool
-isEmptyVal ValEmpty = True
-isEmptyVal _ = False
 
 retId, entrypointId :: Ident
 retId = Ident "return"

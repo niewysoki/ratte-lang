@@ -1,0 +1,40 @@
+fn TestShadowingVariable() -> Void {
+  let a: Int = 0;
+  let x: Int = 10;
+
+  while (a < 20) {
+    let x: Int = 1;
+    a = a + x;
+  }
+
+  Println(ShowInt(a));
+  return;
+}
+
+fn TestShadowingFunction() -> Void {
+  fn TestShadowingVariable() -> Void {
+    Println("surprise");
+    return;
+  }
+
+  TestShadowingVariable();
+  return;
+}
+
+fn TestShadowingFunctionSelf() -> Void {
+  fn TestShadowingFunctionSelf() -> Void {
+    Println("no recursion");
+    return;
+  }
+
+  Println("recursion?");
+  TestShadowingFunctionSelf();
+  return;
+}
+
+fn Main() -> Void {
+  TestShadowingVariable();
+  TestShadowingFunction();
+  TestShadowingFunctionSelf();
+  return;
+}

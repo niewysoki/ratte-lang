@@ -151,7 +151,7 @@ evalBoolToBoolOp op exp1 exp2 = do
 
 guardReturn :: EvalM -> EvalM
 guardReturn computation = do
-  ret <- gets $ isEmptyVal . getValue retId
+  ret <- gets $ (== ValEmpty) . getValue retId
   if ret then computation else return ValEmpty
 
 guardBuiltIn :: [Expr] -> Ident -> EvalM -> EvalM
