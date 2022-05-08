@@ -36,6 +36,7 @@ instance Checker Block where
 
 instance Checker Stmt where
   checkM _ (SEmpty _) = return ()
+  
   checkM _ (SAss pos ident exp) = do
     mem <- get
     (t, mut) <- C.expectDefinedSymbolM pos ident
@@ -44,7 +45,7 @@ instance Checker Stmt where
     assertM (mut == Mut) (ConstMismatchE pos t)
   
   checkM _ (SBStmt pos block) = do return ()
-  
+
   checkM _ _ = undefined
 
 eval :: Expr -> Memory -> CheckerWithValueM
