@@ -1,5 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
-module Evaluator.Memory (Value(..), Memory, emptyMemory, getValue, putValue, updateValue, retId, entrypointId, putEnv, getEnv, putArgValsLocs, getArgLoc) where
+module Evaluator.Memory where
 
 import           Control.Monad
 import qualified Data.Map         as M
@@ -32,6 +32,10 @@ data Memory = Mem
 
 emptyMemory :: Memory
 emptyMemory = Mem M.empty M.empty 0
+
+isEmptyVal :: Value -> Bool
+isEmptyVal ValEmpty = True
+isEmptyVal _ = False
 
 retId, entrypointId :: Ident
 retId = Ident "return"
