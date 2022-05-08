@@ -17,46 +17,44 @@ instance Eval Program where
     evalM $ EApp pos entrypointId []
 
 instance Eval Init where
-  evalM (IFn _ id args _ block) = do
+  evalM (IFn _ ident args _ block) = do
     fun <- gets $ ValFunction args block . getEnv
-    modify $ putValue id fun
+    modify $ putValue ident fun
     return ValEmpty
 
-  evalM (IVarMut _ id _ exp) = do
+  evalM (IVarMut _ ident _ exp) = do
     val <- evalM exp
-    modify $ putValue id val
+    modify $ putValue ident val
     return ValEmpty
 
-  evalM (IVar _ id _ exp) = do
+  evalM (IVar _ ident _ exp) = do
     val <- evalM exp
-    modify $ putValue id val
+    modify $ putValue ident val
     return ValEmpty
 
 instance Eval Block where
   evalM (SBlock _ stmts) = do
-    env <- gets getEnv
     mapM_ evalM stmts
-    modify $ putEnv env
     return ValEmpty
 
 instance Eval Stmt where
   evalM (SEmpty _) = guardReturn $ return ValEmpty
-  evalM (SBStmt _ block) = guardReturn $ evalM block
+  evalM (SBStmt _ block) = guardReturn . protectEnv $ evalM block
   evalM (SInit _ init) = guardReturn $ evalM init
 
-  evalM (SAss _ id exp) = guardReturn $ do
+  evalM (SAss _ ident exp) = guardReturn $ do
     val <- evalM exp
-    modify $ updateValue id val
+    modify $ updateValue ident val
     return ValEmpty
 
-  evalM (SIncr _ id) = guardReturn $ do
-    (ValInt x) <- gets $ getValue id
-    modify $ updateValue id (ValInt $ x + 1)
+  evalM (SIncr _ ident) = guardReturn $ do
+    (ValInt x) <- gets $ getValue ident
+    modify $ updateValue ident (ValInt $ x + 1)
     return ValEmpty
 
-  evalM (SDecr _ id) = guardReturn $ do
-    (ValInt x) <- gets $ getValue id
-    modify $ updateValue id (ValInt $ x - 1)
+  evalM (SDecr _ ident) = guardReturn $ do
+    (ValInt x) <- gets $ getValue ident
+    modify $ updateValue ident (ValInt $ x - 1)
     return ValEmpty
 
   evalM (SRet _ exp) = guardReturn $ do
@@ -70,15 +68,18 @@ instance Eval Stmt where
 
   evalM (SCond _ cond block) = guardReturn $ do
     (ValBool x) <- evalM cond
-    if x then evalM block else return ValEmpty
+    protectEnv $ if x then evalM block else return ValEmpty
 
   evalM (SCondElse _ cond block block') = guardReturn $ do
     (ValBool x) <- evalM cond
-    if x then evalM block else evalM block'
+    protectEnv $ if x then evalM block else evalM block'
 
   evalM loop@(SWhile _ cond block) = guardReturn $ do
     (ValBool x) <- evalM cond
-    if x then do evalM block >> evalM loop else return ValEmpty
+    if x then do
+      protectEnv (evalM block)
+      evalM loop
+    else return ValEmpty
 
   evalM (SExp _ exp) = guardReturn $ evalM exp
 
@@ -113,25 +114,16 @@ instance Eval Expr where
     (ValInt x2) <- evalM exp2
     if x2 == 0 then throwError $ DivideByZeroE p else evalIntToIntOp quot exp1 exp2
 
-  evalM (EApp _ id argExps) = guardBuiltIn argExps id $ do
-    mem <- get
+  evalM (EApp _ ident argExps) = guardBuiltIn argExps ident . protectEnv $ do
     argVals <- mapM evalM argExps
-    -- argLocs <-
-
-    let env' = getEnv mem
-    let fun@(ValFunction funArgs funBlock funEnv) = getValue id mem
+    argSrcs <- gets $ mapM getArgLoc argExps
+    fun@(ValFunction funArgs funBlock funEnv) <- gets $ getValue ident
     modify $ putEnv funEnv
-    modify $ putValue id fun
+    modify $ putValue ident fun
     modify $ putValue retId ValEmpty
-
-    --mapM_
-
+    modify $ putArgValsLocs $ zip3 funArgs argVals argSrcs
     evalM funBlock
-
-    let val = getValue retId mem
-    modify $ putEnv env'
-    return val
-
+    gets $ getValue retId
 
 evalValToBoolOp :: (Value -> Value -> Bool) -> Expr -> Expr -> EvalM
 evalValToBoolOp op exp1 exp2 = do
@@ -163,7 +155,13 @@ guardReturn computation = do
   if ret then return ValEmpty else computation
 
 guardBuiltIn :: [Expr] -> Ident -> EvalM -> EvalM
-guardBuiltIn argExps id computation = if isBuiltIn id
-  then mapM evalM argExps >>= evalBuiltIn id
+guardBuiltIn argExps ident computation = if isBuiltIn ident
+  then mapM evalM argExps >>= evalBuiltIn ident
   else computation
-
+ 
+protectEnv :: EvalM -> EvalM
+protectEnv computation = do
+  env <- gets getEnv
+  val <- computation
+  modify $ putEnv env
+  return val
