@@ -1,16 +1,16 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Typechecker.Typechecker where
 import           Control.Monad.Except
+import           Control.Monad.Reader   (ReaderT (runReaderT))
 import           Control.Monad.State
 import           Generated.Syntax
+import qualified Typechecker.Checker    as C
+import           Typechecker.Common
+import qualified Typechecker.Evaluator  as E
 import           Typechecker.Exceptions
-import           Typechecker.Monads
 import           Typechecker.Memory
+import           Typechecker.Monads
 import           Typechecker.Types
-import qualified Typechecker.Checker as C
-import qualified Typechecker.Evaluator as E
-import Control.Monad.Reader (ReaderT(runReaderT))
-import Typechecker.Common
 
 typecheck :: Program -> Either TypeCheckingException Program
 typecheck p = do
@@ -22,36 +22,44 @@ instance Checker Program where
     return ()
 
 instance Checker Init where
-  checkM _ (IFn pos id args ret block) = do
-    return () 
-
-  checkM _ (IVar pos id t exp) = do
-    return ()
-
-  checkM _ (IVarMut pos id t exp) = do
-    return ()
+  checkM _ (IFn pos id args ret block) = undefined
+  checkM _ (IVar pos id t exp) = undefined
+  checkM _ (IVarMut pos id t exp) = undefined
 
 instance Checker Block where
-  checkM retT (SBlock _ stmts) = mapM_ (checkM retT) stmts
+  checkM retT (SBlock _ stmts) = undefined
 
 instance Checker Stmt where
   checkM _ (SEmpty _) = return ()
-  
+
+  checkM _ (SBStmt pos block) = undefined
+  checkM _ (SInit pos init) = undefined
+
   checkM _ (SAss pos ident exp) = do
     mem <- get
     (t, mut) <- C.expectDefinedSymbolM pos ident
     (t', mut') <- eval exp mem
     assertM (t == t') (TypeMismatchE pos t t')
-    assertM (mut == Mut) (ConstMismatchE pos t)
-  
-  checkM _ (SBStmt pos block) = do return ()
+    assertM (mut == Mut) (ConstViolationE pos t)
 
-  checkM _ _ = undefined
+  checkM _ (SIncr pos ident) = do
+    (t, mut) <- C.expectDefinedSymbolM pos ident
+    assertM (t == ITInt) (TypeMismatchE pos ITInt t)
+    assertM (mut == Mut) (ConstViolationE pos t)
+
+  checkM t (SDecr pos ident) = checkM t (SIncr pos ident)
+
+  checkM _ (SRet pos exp) = undefined
+  checkM _ (SVRet pos) = undefined
+  checkM _ (SCond pos cond block) = undefined
+  checkM _ (SCondElse pos cond block block') = undefined
+  checkM _ (SWhile pos cond block) = undefined
+  checkM _ (SExp pos exp) = undefined
 
 eval :: Expr -> Memory -> CheckerWithValueM
 eval exp mem = case runExcept $ runReaderT (evalM exp) mem of
   Left tce -> throwError tce
-  Right t -> return t
+  Right t  -> return t
 
 instance Eval Expr where
   evalM (ELitInt _ _)          = return (ITInt, Imm)

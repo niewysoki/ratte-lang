@@ -10,9 +10,9 @@ data TypeCheckingException
   | NotCallableE Pos InternalType
   | ArgumentCountMismatchE Pos Ident Int Int
   | ArgumentTypesMismatchE Pos InternalType InternalType
-  | ArgumentConstMismatchE Pos InternalType
+  | ArgumentConstViolationE Pos InternalType
   | TypeMismatchE Pos InternalType InternalType
-  | ConstMismatchE Pos InternalType
+  | ConstViolationE Pos InternalType
 
 instance Show TypeCheckingException where
   show = const "type exception"

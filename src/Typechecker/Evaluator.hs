@@ -26,7 +26,7 @@ expectArgTypesM :: BNFC'Position -> (ValueType, ValueType) -> EvalWithoutValueM
 expectArgTypesM pos ((t, _), (t', _)) = when (t /= t') $ throwError $ ArgumentTypesMismatchE pos t t'
 
 expectArgConstM :: BNFC'Position -> (ValueType, ValueType) -> EvalWithoutValueM
-expectArgConstM pos ((t, mut), (_, mut')) = unless (canAssign mut mut') $ throwError $ ArgumentConstMismatchE pos t
+expectArgConstM pos ((t, mut), (_, mut')) = unless (canAssign mut mut') $ throwError $ ArgumentConstViolationE pos t
 
 expectFunctionTypeM :: BNFC'Position -> InternalType -> EvalWithoutValueM
 expectFunctionTypeM pos fun@(ITFunction _ _) = return ()
