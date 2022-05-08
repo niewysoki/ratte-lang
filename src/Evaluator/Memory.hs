@@ -1,8 +1,10 @@
 {-# LANGUAGE RecordWildCards #-}
 module Evaluator.Memory (Value(..), Memory, emptyMemory, getValue, putValue, updateValue, retId, entrypointId, putEnv, getEnv, putArgValsLocs, getArgLoc) where
 
+import           Control.Monad
 import qualified Data.Map         as M
 import           Generated.Syntax
+
 data Value
   = ValEmpty
   | ValVoid
@@ -36,7 +38,7 @@ retId = Ident "return"
 entrypointId = Ident "Main"
 
 getValue :: Ident -> Memory -> Value
-getValue ident mem = _store mem M.! getLoc ident mem
+getValue = liftM2 (M.!) _store . getLoc
 
 putValue :: Ident -> Value -> Memory -> Memory
 putValue ident val Mem{..} = Mem
@@ -64,7 +66,7 @@ putArgValsLocs :: [(Arg, Value, ArgSource)] -> Memory -> Memory
 putArgValsLocs = flip $ foldr putArgVal
 
 getLoc :: Ident -> Memory -> Loc
-getLoc ident mem = _env mem M.! ident
+getLoc = flip ((M.!) . _env)
 
 getArgLoc :: Expr -> Memory -> ArgSource
 getArgLoc (EVar _ name) = ArgLoc . getLoc name
