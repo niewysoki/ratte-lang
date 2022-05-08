@@ -87,7 +87,7 @@ instance Eval Expr where
   evalM (ELitInt _ n) = return $ ValInt n
   evalM (ELitTrue _)  = return $ ValBool True
   evalM (ELitFalse _) = return $ ValBool False
-  evalM (EString _ s) = return $ ValString s
+  evalM (EString _ s) = return $ ValStr s
 
   evalM (ENeg _ exp)  = do
     (ValInt x) <- evalM exp

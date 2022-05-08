@@ -2,18 +2,21 @@ module Typechecker.Monads where
 import Control.Monad.State (StateT)
 import Control.Monad.Except (Except)
 import Control.Monad.Reader (ReaderT)
-import Typechecker.Persistence (Env)
-import Typechecker.Exceptions (TypecheckingException)
-import Typechecker.Types (IType)
+import Typechecker.Memory (Memory)
+import Typechecker.Exceptions (TypeCheckingException)
+import Typechecker.Types (InternalType, ValueType)
 
-type TypeMonad a b = a Env (Except TypecheckingException) b
+type CheckerM' a = StateT Memory (Except TypeCheckingException) a
+type CheckerM = CheckerM' ()
+type CheckerWithValueM = CheckerM' ValueType
 
-type CheckerM = TypeMonad StateT ()
-type GetterM = TypeMonad ReaderT IType
-type EmptyGetterM = TypeMonad ReaderT ()
+type EvalM' a = ReaderT Memory (Except TypeCheckingException) a
+type EvalM = EvalM' ValueType
+type EvalWithoutValueM = EvalM' ()
 
 class Checker a where
-  checkM :: Maybe IType -> a -> CheckerM
+  checkM :: Maybe InternalType -> a -> CheckerM
 
-class Getter a where
-  getM :: a -> GetterM
+class Eval a where
+  evalM :: a -> EvalM
+

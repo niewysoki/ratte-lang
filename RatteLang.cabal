@@ -32,10 +32,13 @@ library ratte
     Generated.Lexer
     Generated.Parser
     Generated.Syntax
+    Typechecker.Common
     Typechecker.Exceptions
     Typechecker.Monads
-    Typechecker.Persistence
+    Typechecker.Memory
     Typechecker.Typechecker
+    Typechecker.Checker
+    Typechecker.Evaluator
     Typechecker.Types
   hs-source-dirs:
     src

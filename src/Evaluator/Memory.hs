@@ -10,13 +10,13 @@ data Value
   | ValVoid
   | ValInt Integer
   | ValBool Bool
-  | ValString String
+  | ValStr String
   | ValFunction [Arg] Block Env deriving Show
 
 instance Eq Value where
   ValInt x == ValInt x' = x == x'
   ValBool x == ValBool x' = x == x'
-  ValString x == ValString x' = x == x'
+  ValStr x == ValStr x' = x == x'
   ValEmpty == ValEmpty = True
   _ == _ = False
 

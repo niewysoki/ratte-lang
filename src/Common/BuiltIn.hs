@@ -11,11 +11,11 @@ printStr = "Println"
 showInt = "ShowInt"
 showBoolean = "ShowBoolean"
 
-builtInFuncTypes :: [(Ident, IType)]
+builtInFuncTypes :: [(Ident, InternalType)]
 builtInFuncTypes = [
-  (Ident printStr, ITFun [ITStr] ITVoid),
-  (Ident showInt, ITFun [ITInt] ITStr),
-  (Ident showBoolean, ITFun [ITBool] ITStr)]
+  (Ident printStr, ITFunction [(ITStr, Imm)] ITVoid),
+  (Ident showInt, ITFunction [(ITInt, Imm)] ITStr),
+  (Ident showBoolean, ITFunction [(ITBool, Imm)] ITStr)]
 
 builtInFuncNames :: [String]
 builtInFuncNames = map ((\ (Ident x) -> x) . fst) builtInFuncTypes
@@ -26,13 +26,13 @@ isBuiltIn (Ident name) = name `elem` builtInFuncNames
 evalBuiltIn :: Ident -> [Value] -> EvalM
 evalBuiltIn (Ident name) [value]
   | name == printStr    = liftIO $ putStrLn (showValue value) >> return ValEmpty
-  | name == showInt     = return . ValString $ showValue value
-  | name == showBoolean = return . ValString $ showValue value
+  | name == showInt     = return . ValStr $ showValue value
+  | name == showBoolean = return . ValStr $ showValue value
 
 evalBuiltIn _ _ = throwError $ UnkownE Nothing
 
 showValue :: Value -> String
-showValue (ValString s) = s
+showValue (ValStr s) = s
 showValue (ValInt n)    = show n
 showValue (ValBool b)   = show b
 showValue _             = ""
