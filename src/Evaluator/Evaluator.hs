@@ -1,12 +1,12 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Evaluator.Evaluator (eval) where
+import           Common.BuiltIn
 import           Control.Monad.Except
 import           Control.Monad.State
 import           Evaluator.Exceptions
 import           Evaluator.Memory
 import           Evaluator.Monads
 import           Generated.Syntax
-import Common.BuiltIn
 
 eval :: Program -> IO (Either RuntimeException Value)
 eval = runExceptT . flip evalStateT emptyMemory . evalM
@@ -158,7 +158,7 @@ guardBuiltIn :: [Expr] -> Ident -> EvalM -> EvalM
 guardBuiltIn argExps ident computation = if isBuiltIn ident
   then mapM evalM argExps >>= evalBuiltIn ident
   else computation
- 
+
 protectEnv :: EvalM -> EvalM
 protectEnv computation = do
   env <- gets getEnv

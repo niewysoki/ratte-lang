@@ -3,7 +3,6 @@ module Evaluator.Memory (Value(..), Memory, emptyMemory, getValue, putValue, upd
 
 import qualified Data.Map         as M
 import           Generated.Syntax
-
 data Value
   = ValEmpty
   | ValVoid

@@ -1,11 +1,11 @@
 module Interpreter (interpretFile, interpret) where
-import Control.Monad
-import System.IO
-import System.Exit
-import Evaluator.Evaluator
-import Typechecker.Typechecker
-import Control.Arrow
-import Generated.Parser
+import           Control.Arrow           (ArrowChoice (left))
+import           Control.Monad           ((<=<))
+import           Evaluator.Evaluator     (eval)
+import           Generated.Parser        (myLexer, pProgram)
+import           System.Exit             (exitFailure, exitSuccess)
+import           System.IO               (hPrint, stderr)
+import           Typechecker.Typechecker (typecheck)
 
 interpretFile :: FilePath -> IO ()
 interpretFile = interpret <=< readFile
@@ -16,7 +16,6 @@ exit comp = do
   case result of
     Left err -> hPrint stderr err >> exitFailure
     Right _  -> exitSuccess
-
 
 interpret :: String -> IO ()
 interpret = exit . eval' . typecheck' . pProgram . myLexer where
