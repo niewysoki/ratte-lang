@@ -26,7 +26,7 @@ instance Checker Program where
 instance Checker Init where
   checkM _ (IFn pos id args ret block) = do
     Comm.expectUniqueArgumentsM args $ ArgumentRedefinitionE pos
-    let funT@(ITFunction argTs retT) = convertType (args, ret)
+    let funT@(ITFun argTs retT) = convertType (args, ret)
     let argIds = map getArgIdent args
     modify $ addType id (funT, Imm)
     mem <- get
@@ -91,26 +91,26 @@ instance Eval Expr where
   evalM (ELitFalse _)          = return (ITBool, Imm)
   evalM (ELitTrue _)           = return (ITBool, Imm)
   evalM (EString _ _)          = return (ITStr, Imm)
-  evalM (ENeg pos exp)         = mapM evalM [exp] >>= Eval.expectTypesM pos ITInt ITInt
-  evalM (ENot pos exp)         = mapM evalM [exp] >>= Eval.expectTypesM pos ITBool ITBool
-  evalM (EMul pos exp1 _ exp2) = mapM evalM [exp1, exp2] >>= Eval.expectTypesM pos ITInt ITInt
-  evalM (EAdd pos exp1 _ exp2) = mapM evalM [exp1, exp2] >>= Eval.expectTypesM pos ITInt ITInt
-  evalM (ERel pos exp1 _ exp2) = mapM evalM [exp1, exp2] >>= Eval.expectTypesM pos ITInt ITBool
-  evalM (EAnd pos exp1 exp2)   = mapM evalM [exp1, exp2] >>= Eval.expectTypesM pos ITBool ITBool
-  evalM (EOr pos exp1 exp2)    = mapM evalM [exp1, exp2] >>= Eval.expectTypesM pos ITBool ITBool
+  evalM (ENeg pos exp)         = mapM evalM [exp] >>= Eval.expectSimpleTypesM pos ITInt ITInt
+  evalM (ENot pos exp)         = mapM evalM [exp] >>= Eval.expectSimpleTypesM pos ITBool ITBool
+  evalM (EMul pos exp1 _ exp2) = mapM evalM [exp1, exp2] >>= Eval.expectSimpleTypesM pos ITInt ITInt
+  evalM (EAdd pos exp1 _ exp2) = mapM evalM [exp1, exp2] >>= Eval.expectSimpleTypesM pos ITInt ITInt
+  evalM (ERel pos exp1 _ exp2) = mapM evalM [exp1, exp2] >>= Eval.expectSimpleTypesM pos ITInt ITBool
+  evalM (EAnd pos exp1 exp2)   = mapM evalM [exp1, exp2] >>= Eval.expectSimpleTypesM pos ITBool ITBool
+  evalM (EOr pos exp1 exp2)    = mapM evalM [exp1, exp2] >>= Eval.expectSimpleTypesM pos ITBool ITBool
   evalM (EVar pos ident)       = Eval.expectAndGetDefinedSymbolM pos ident
 
   evalM (EApp pos ident args) = do
     (t, _) <- Eval.expectAndGetDefinedSymbolM pos ident
     Eval.expectFunctionTypeM pos t
-    let (ITFunction funArgTs retT) = t
+    let (ITFun funArgTs retT) = t
     appArgTs <- mapM evalM args
     Eval.expectMatchingArgsM pos ident funArgTs appArgTs
     return (retT, Imm)
 
   evalM (ELambda pos args ret block) = do
     Comm.expectUniqueArgumentsM args $ ArgumentRedefinitionE pos
-    let funT@(ITFunction argTs retT) = convertType (args, ret)
+    let funT@(ITFun argTs retT) = convertType (args, ret)
     let argIds = map getArgIdent args
     --local  (addTypes (zip argIds argTs)) TODO
     return (funT, Imm)

@@ -17,9 +17,9 @@ showBoolean = "ShowBoolean"
 
 builtInFuncTypes :: [(Ident, ValueType)]
 builtInFuncTypes = [
-  (Ident printStr, (ITFunction [(ITStr, Imm)] ITVoid, Imm)),
-  (Ident showInt, (ITFunction [(ITInt, Imm)] ITStr, Imm)),
-  (Ident showBoolean, (ITFunction [(ITBool, Imm)] ITStr, Imm))
+  (Ident printStr, (ITFun [(ITStr, Imm)] ITVoid, Imm)),
+  (Ident showInt, (ITFun [(ITInt, Imm)] ITStr, Imm)),
+  (Ident showBoolean, (ITFun [(ITBool, Imm)] ITStr, Imm))
   ]
 
 builtInFuncNames :: [String]

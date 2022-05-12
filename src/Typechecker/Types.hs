@@ -1,11 +1,18 @@
 {-# LANGUAGE FlexibleInstances #-}
-module Typechecker.Types where
-import Data.List
-import Generated.Syntax
+module Typechecker.Types 
+  ( ValueType
+  , Mutability(..)
+  , InternalType(..)
+  , canAssign
+  , canApply
+  , convertType
+  ) where
+import           Data.List
+import           Generated.Syntax
 
 type ValueType = (InternalType, Mutability)
 
-data Mutability = Imm | Mut | Any deriving Eq
+data Mutability = Imm | Mut deriving Eq
 
 data InternalType
   = ITEmpty
@@ -13,18 +20,28 @@ data InternalType
   | ITInt
   | ITStr
   | ITBool
-  | ITFunction [ValueType] InternalType
+  | ITFun [ValueType] InternalType
   deriving Eq
+
+canAssign :: Mutability -> Mutability -> Bool
+canAssign Imm Mut = False
+canAssign _ _ = True
+
+canApply :: InternalType -> InternalType -> Bool
+canApply (ITFun argTs retT) (ITFun argTs' retT') = retT == retT' && validArgPairs where
+  validArgPairs = all validate $ zip argTs argTs'
+  validate ((t, mut), (t', mut')) = t == t' && canAssign mut mut'
+canApply t t' = t == t'
 
 instance Show InternalType where
   show ITVoid = "Void"
   show ITInt = "Int"
   show ITStr = "Str"
   show ITBool = "Bool"
-  show (ITFunction argTs retT) = "(" ++ showArgs argTs ++ ") -> " ++ show retT where
+  show (ITFun argTs retT) = "(" ++ showArgs argTs ++ ") -> " ++ show retT where
     showArgs = intercalate ", " . map showArg
     showArg (t, Mut) = "mut " ++ show t
-    showArg (t, _) = show t
+    showArg (t, _)   = show t
   show _ = ""
 
 class Typing a where
@@ -35,15 +52,21 @@ instance Typing Type where
   convertType (TStr _) = ITStr
   convertType (TBool _) = ITBool
   convertType (TVoid _) = ITVoid
-  convertType (TFun _ args ret) = ITFunction argTs (convertType ret) where
-    argTs =  zip <$> map convertType <*> map (const Any) $ args
+  convertType (TFun _ args ret) = ITFun argTs (convertType ret) where
+    argTs =  zip <$> map convertType <*> map getMutability $ args
+    getMutability (ATArg _ _)    = Imm
+    getMutability (ATArgMut _ _) = Mut
+
+instance Typing ArgType where
+  convertType (ATArg _ arg)    = convertType arg
+  convertType (ATArgMut _ arg) = convertType arg
 
 instance Typing Arg where
-  convertType (IArg _ _ arg) = convertType arg
+  convertType (IArg _ _ arg)    = convertType arg
   convertType (IArgMut _ _ arg) = convertType arg
 
 instance Typing ([Arg], Type) where
-  convertType (args, ret) = ITFunction argTs (convertType ret) where
+  convertType (args, ret) = ITFun argTs (convertType ret) where
     argTs = zip <$> map convertType <*> map getMutability $ args
-    getMutability IArg {} = Imm
+    getMutability IArg {}    = Imm
     getMutability IArgMut {} = Mut

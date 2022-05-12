@@ -62,13 +62,11 @@ TVoid.     Type ::= "Void" ;
 
 TFun.      Type ::= "fn" "(" [ArgType] ")" "->" Type ;
 
-separator  Type "," ;
-
 -- Function Argument Types ---------------------------------
 
-FTArg.     ArgType ::= Type ;
+ATArg.     ArgType ::= Type ;
 
-FTArgMut.  ArgType ::= "mut " Type ;
+ATArgMut.  ArgType ::= "mut " Type ;
 
 separator  ArgType "," ;
 

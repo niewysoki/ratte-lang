@@ -1,7 +1,6 @@
 module Typechecker.Common
   ( assertM
   , expectUniqueArgumentsM
-  , canAssign
   , initGetIdent
   , initGetPos
   , getArgIdent
@@ -20,10 +19,6 @@ expectUniqueArgumentsM :: MonadError e m => [Arg] -> e -> m ()
 expectUniqueArgumentsM args ex = do
   let ret = validateFunArgs args
   assertM ret ex
-
-canAssign :: Mutability -> Mutability -> Bool
-canAssign Imm Mut = False
-canAssign _ _     = True
 
 initGetIdent :: Init -> Ident
 initGetIdent (IFn _ ident _ _ _)   = ident

@@ -22,14 +22,14 @@ expectMatchingArgsM pos ident funArgTs appArgTs = do
     appArgCount = length appArgTs :: Int
     argPairs = zip funArgTs appArgTs :: [(ValueType, ValueType)]
 
-expectArgTypesM :: BNFC'Position -> (ValueType, ValueType) -> EvalWithoutValueM
-expectArgTypesM pos ((t, _), (t', _)) = when (t /= t') $ throwError $ ArgumentTypesMismatchE pos t t'
+    expectArgTypesM :: BNFC'Position -> (ValueType, ValueType) -> EvalWithoutValueM
+    expectArgTypesM pos ((t, _), (t', _)) = assertM (canApply t t') $ ArgumentTypesMismatchE pos t t'
 
-expectArgConstM :: BNFC'Position -> (ValueType, ValueType) -> EvalWithoutValueM
-expectArgConstM pos ((t, mut), (_, mut')) = unless (canAssign mut mut') $ throwError $ ArgumentConstViolationE pos t
+    expectArgConstM :: BNFC'Position -> (ValueType, ValueType) -> EvalWithoutValueM
+    expectArgConstM pos ((t, mut), (_, mut')) = assertM (canAssign mut mut') $ ArgumentConstViolationE pos t
 
 expectFunctionTypeM :: BNFC'Position -> InternalType -> EvalWithoutValueM
-expectFunctionTypeM pos fun@(ITFunction _ _) = return ()
+expectFunctionTypeM pos fun@(ITFun _ _) = return ()
 expectFunctionTypeM pos t                    = throwError $ NotCallableE pos t
 
 expectAndGetDefinedSymbolM :: BNFC'Position -> Ident -> EvalM
@@ -39,8 +39,8 @@ expectAndGetDefinedSymbolM pos ident = do
     Just t  -> return t
     Nothing -> throwError $ UndefinedSymbolE pos ident
 
-expectTypesM :: BNFC'Position -> InternalType -> InternalType -> [ValueType] -> EvalM
-expectTypesM pos expT retT types = do
+expectSimpleTypesM :: BNFC'Position -> InternalType -> InternalType -> [ValueType] -> EvalM
+expectSimpleTypesM pos expT retT types = do
   let t = fromMaybe expT . find (/= expT) $ map fst types
   assertM (expT == t) (InvalidTypeE pos expT t)
   return (retT, Imm)

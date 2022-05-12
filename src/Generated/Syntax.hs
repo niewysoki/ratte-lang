@@ -55,7 +55,15 @@ data Stmt' a
 
 type Type = Type' BNFC'Position
 data Type' a
-    = TInt a | TStr a | TBool a | TVoid a | TFun a [Type' a] (Type' a)
+    = TInt a
+    | TStr a
+    | TBool a
+    | TVoid a
+    | TFun a [ArgType' a] (Type' a)
+  deriving (C.Eq, C.Ord, C.Show, C.Read, C.Functor, C.Foldable, C.Traversable)
+
+type ArgType = ArgType' BNFC'Position
+data ArgType' a = ATArg a (Type' a) | ATArgMut a (Type' a)
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Functor, C.Foldable, C.Traversable)
 
 type Expr = Expr' BNFC'Position
@@ -147,6 +155,11 @@ instance HasPosition Type where
     TBool p -> p
     TVoid p -> p
     TFun p _ _ -> p
+
+instance HasPosition ArgType where
+  hasPosition = \case
+    ATArg p _ -> p
+    ATArgMut p _ -> p
 
 instance HasPosition Expr where
   hasPosition = \case
