@@ -6,10 +6,10 @@ module Typechecker.Common
   , getArgIdent
   ) where
 import           Control.Monad.Except
+import           Data.List
 import           Generated.Syntax
+import           Typechecker.Exceptions
 import           Typechecker.Types
-import Data.List
-import Typechecker.Exceptions
 
 assertM :: MonadError e m => Bool -> e -> m ()
 assertM False ex = throwError ex
@@ -31,7 +31,7 @@ initGetPos (IVar pos _ _ _)    = pos
 initGetPos (IVarMut pos _ _ _) = pos
 
 getArgIdent :: Arg -> Ident
-getArgIdent (IArg _ id _) = id
+getArgIdent (IArg _ id _)    = id
 getArgIdent (IArgMut _ id _) = id
 
 validateFunArgs :: [Arg] -> Bool

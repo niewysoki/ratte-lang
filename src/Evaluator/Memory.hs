@@ -1,5 +1,19 @@
 {-# LANGUAGE RecordWildCards #-}
-module Evaluator.Memory where
+module Evaluator.Memory 
+  ( Value(..)
+  , Memory
+  , emptyMemory
+  , retId
+  , entrypointId
+  , getValue
+  , putValue
+  , updateValue
+  , putEnv
+  , getEnv
+  , putArgVal
+  , putArgValsLocs
+  , getArgLoc
+  ) where
 
 import           Control.Monad
 import qualified Data.Map         as M

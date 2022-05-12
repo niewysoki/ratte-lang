@@ -1,4 +1,4 @@
-module Evaluator.Monads where
+module Evaluator.Monads (EvalM, Eval(..)) where
 import           Control.Monad.Except
 import           Control.Monad.State
 import           Evaluator.Exceptions

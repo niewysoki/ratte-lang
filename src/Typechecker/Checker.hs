@@ -1,12 +1,17 @@
-module Typechecker.Checker where
-import Typechecker.Monads
-import Generated.Syntax
-import Typechecker.Exceptions
-import Typechecker.Memory
-import Control.Monad.State
-import Control.Monad.Except
-import Typechecker.Common
-import Typechecker.Types
+module Typechecker.Checker
+  ( expectAndGetDefinedSymbolM
+  , expectUniqueInitM
+  , expectReturnOccuredM
+  , expectUniqueOrShadowM
+  ) where
+import           Control.Monad.Except
+import           Control.Monad.State
+import           Generated.Syntax
+import           Typechecker.Common
+import           Typechecker.Exceptions
+import           Typechecker.Memory
+import           Typechecker.Monads
+import           Typechecker.Types
 
 expectAndGetDefinedSymbolM :: BNFC'Position -> Ident -> CheckerWithValueM
 expectAndGetDefinedSymbolM pos ident = do

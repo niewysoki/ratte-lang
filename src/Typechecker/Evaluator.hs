@@ -1,16 +1,20 @@
 {-# LANGUAGE FlexibleInstances #-}
-module Typechecker.Evaluator where
+module Typechecker.Evaluator
+  ( expectMatchingArgsM
+  , expectFunctionTypeM
+  , expectAndGetDefinedSymbolM
+  , expectSimpleTypesM
+  ) where
 import           Control.Monad.Except
 import           Control.Monad.Reader
 import           Data.Foldable
 import           Data.Maybe
 import           Generated.Syntax
+import           Typechecker.Common
 import           Typechecker.Exceptions
 import           Typechecker.Memory
 import           Typechecker.Monads
 import           Typechecker.Types
-import           Typechecker.Common
-
 
 expectMatchingArgsM :: BNFC'Position -> Ident -> [ValueType] -> [ValueType] -> EvalWithoutValueM
 expectMatchingArgsM pos ident funArgTs appArgTs = do
@@ -30,7 +34,7 @@ expectMatchingArgsM pos ident funArgTs appArgTs = do
 
 expectFunctionTypeM :: BNFC'Position -> InternalType -> EvalWithoutValueM
 expectFunctionTypeM pos fun@(ITFun _ _) = return ()
-expectFunctionTypeM pos t                    = throwError $ NotCallableE pos t
+expectFunctionTypeM pos t               = throwError $ NotCallableE pos t
 
 expectAndGetDefinedSymbolM :: BNFC'Position -> Ident -> EvalM
 expectAndGetDefinedSymbolM pos ident = do

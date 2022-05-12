@@ -1,10 +1,19 @@
-module Typechecker.Memory where
+module Typechecker.Memory
+  ( Memory
+  , emptyMemory
+  , getType
+  , addType
+  , addTypes
+  , setOuterEnv
+  , setReturn
+  , hasReturn
+  , hasSymbolInCurrentContext
+  ) where
 
+import           Common.BuiltIn
 import           Data.Map          as M
 import           Generated.Syntax
 import           Typechecker.Types
-import           Common.BuiltIn
-
 
 type Env = M.Map Ident ValueType
 
@@ -31,7 +40,7 @@ addTypes :: [(Ident, ValueType)] -> Memory -> Memory
 addTypes ts mem = mem {_env = M.union (fromList ts) (_env mem)}
 
 setOuterEnv :: Memory -> Memory
-setOuterEnv mem = Mem 
+setOuterEnv mem = Mem
   { _env = M.empty
   , _outer_env = getEnvUnion mem
   , _ret = _ret mem
@@ -42,7 +51,7 @@ setReturn mem = mem {_ret = True}
 
 hasReturn :: Memory -> Bool
 hasReturn = _ret
- 
+
 hasSymbolInCurrentContext :: Ident -> Memory -> Bool
 hasSymbolInCurrentContext = (. _env) . M.member
 
