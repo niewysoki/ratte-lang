@@ -14,7 +14,7 @@ import           Typechecker.Common
 
 expectMatchingArgsM :: BNFC'Position -> Ident -> [ValueType] -> [ValueType] -> EvalWithoutValueM
 expectMatchingArgsM pos ident funArgTs appArgTs = do
-  assertM (funArgCount /= appArgCount) (ArgumentCountMismatchE pos ident funArgCount appArgCount)
+  assertM (funArgCount == appArgCount) (ArgumentCountMismatchE pos ident funArgCount appArgCount)
   mapM_ (expectArgTypesM pos) argPairs
   mapM_ (expectArgConstM pos) argPairs
   where
@@ -32,8 +32,8 @@ expectFunctionTypeM :: BNFC'Position -> InternalType -> EvalWithoutValueM
 expectFunctionTypeM pos fun@(ITFunction _ _) = return ()
 expectFunctionTypeM pos t                    = throwError $ NotCallableE pos t
 
-expectDefinedSymbolM :: BNFC'Position -> Ident -> EvalM
-expectDefinedSymbolM pos ident = do
+expectAndGetDefinedSymbolM :: BNFC'Position -> Ident -> EvalM
+expectAndGetDefinedSymbolM pos ident = do
   maybeType <- asks (getType ident)
   case maybeType of
     Just t  -> return t

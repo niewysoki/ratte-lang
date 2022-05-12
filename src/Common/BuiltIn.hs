@@ -1,4 +1,8 @@
-module Common.BuiltIn(isBuiltIn, evalBuiltIn) where
+module Common.BuiltIn
+  ( isBuiltIn
+  , evalBuiltIn
+  , builtInFuncTypes
+  ) where
 import           Control.Monad.Except
 import           Evaluator.Exceptions
 import           Evaluator.Memory
@@ -11,11 +15,12 @@ printStr = "Println"
 showInt = "ShowInt"
 showBoolean = "ShowBoolean"
 
-builtInFuncTypes :: [(Ident, InternalType)]
+builtInFuncTypes :: [(Ident, ValueType)]
 builtInFuncTypes = [
-  (Ident printStr, ITFunction [(ITStr, Imm)] ITVoid),
-  (Ident showInt, ITFunction [(ITInt, Imm)] ITStr),
-  (Ident showBoolean, ITFunction [(ITBool, Imm)] ITStr)]
+  (Ident printStr, (ITFunction [(ITStr, Imm)] ITVoid, Imm)),
+  (Ident showInt, (ITFunction [(ITInt, Imm)] ITStr, Imm)),
+  (Ident showBoolean, (ITFunction [(ITBool, Imm)] ITStr, Imm))
+  ]
 
 builtInFuncNames :: [String]
 builtInFuncNames = map ((\ (Ident x) -> x) . fst) builtInFuncTypes
@@ -32,7 +37,7 @@ evalBuiltIn (Ident name) [value]
 evalBuiltIn _ _ = throwError $ UnkownE Nothing
 
 showValue :: Value -> String
-showValue (ValStr s) = s
-showValue (ValInt n)    = show n
-showValue (ValBool b)   = show b
-showValue _             = ""
+showValue (ValStr s)  = s
+showValue (ValInt n)  = show n
+showValue (ValBool b) = show b
+showValue _           = ""

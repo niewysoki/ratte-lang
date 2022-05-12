@@ -13,6 +13,9 @@ data TypeCheckingException
   | ArgumentConstViolationE Pos InternalType
   | TypeMismatchE Pos InternalType InternalType
   | ConstViolationE Pos InternalType
-
-instance Show TypeCheckingException where
-  show = const "type exception"
+  | RedeclarationE Pos Ident Pos
+  | ReturnOutOfScopeE Pos
+  | ReturnTypeMismatchE Pos InternalType InternalType
+  | NoReturnStatementE Pos
+  | ArgumentRedefinitionE Pos
+  | RedefinitionE Pos Ident deriving Show
