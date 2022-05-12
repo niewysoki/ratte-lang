@@ -1,0 +1,35 @@
+fn X (x: Int) -> Int {
+  return x + 1;
+}
+
+fn Z (mut x: Int) -> Int {
+  x++;
+  return x;
+}
+
+fn Y (f: fn (Int) -> Int) -> Int {
+  return f(1);
+}
+
+fn A (f: fn (mut Int) -> Int) -> Int {
+  let x: Int = 1;
+  return f(x);
+}
+
+fn Main () -> Void {
+  let x: Int = 0;
+  let mut y: Int = 2;
+  while (y > 0) {
+    let x: String = "xdd";
+    y = y - 1;
+    Println(x);
+  }
+
+  let z: fn (Int) -> Int = X;
+
+  Println(ShowInt(Y(X)));
+  Println(ShowInt(A(Z)));
+  Println(ShowInt(A(X)));
+  Println(ShowInt(Y(Z)));
+  return;
+}
