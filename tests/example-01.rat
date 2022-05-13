@@ -12,24 +12,56 @@ fn Y (f: fn (Int) -> Int) -> Int {
 }
 
 fn A (f: fn (mut Int) -> Int) -> Int {
-  let x: Int = 1;
+  let mut x: Int = 1;
   return f(x);
+}
+
+
+fn MK (x: Int) -> fn (Int) -> Int {
+  let mut a: Int = x;
+  fn INC(y: Int) -> Int {
+    a = a + y;
+    return a;
+  }
+  return INC;
+}
+
+fn G () -> fn (Int) -> Int {
+  return X;
+}
+
+fn XDD() -> Int {
+  if (1 > 0) {
+    return 100;
+  } else {
+    return 20;
+  }
+
+  return 0;
 }
 
 fn Main () -> Void {
   let x: Int = 0;
-  let mut y: Int = 2;
+  let mut y: Int = x;
+  let w: Int = y;
   while (y > 0) {
     let x: String = "xdd";
     y = y - 1;
     Println(x);
   }
 
-  let z: fn (Int) -> Int = X;
+  let z: fn (mut Int) -> Int = X;
 
   Println(ShowInt(Y(X)));
   Println(ShowInt(A(Z)));
   Println(ShowInt(A(X)));
-  Println(ShowInt(Y(Z)));
+  Println(ShowInt(Y(G())));
+
+  let bbb: fn (Int) -> Int = MK(2);
+  Println(ShowInt(bbb(0)));
+  Println(ShowInt(bbb(1)));
+  Println(ShowInt(bbb(2)));
+
+  Println(ShowInt(XDD()));
   return;
 }

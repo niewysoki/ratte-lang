@@ -31,12 +31,10 @@ instance Checker Init where
     modify $ addType id (funT, Imm)
     mem <- get
     modify $ addTypes $ zip argIds argTs
-    Chck.doNestedChecking $ checkFunctionBody retT
-    put mem 
-    where
-      checkFunctionBody retT = do
-        checkM (Just retT) block
-        Chck.expectReturnOccuredM pos
+    Chck.doNestedChecking (do
+      checkM (Just retT) block
+      Chck.expectReturnOccuredM pos)
+    put mem
 
   checkM _ (IVar pos id t exp) = do
     (expT, _) <- eval exp
@@ -117,12 +115,20 @@ instance Eval Expr where
     Comm.expectUniqueArgumentsM args $ ArgumentRedefinitionE pos
     let funT@(ITFun argTs retT) = convertType (args, ret)
     let argIds = map getArgIdent args
-    --local  (addTypes (zip argIds argTs)) TODO
+    let chk = local setOuterEnv $ check (Just retT) block
+    local (addTypes $ zip argIds argTs) chk
     return (funT, Imm)
 
-eval :: Expr -> CheckerWithValueM
-eval exp = do
+check :: Checker a => Maybe InternalType -> a -> EvalWithoutValueM
+check ret program = do
+  mem <- ask
+  case runExcept $ runStateT (checkM ret program) mem of
+    Left tce -> throwError tce
+    Right _  -> return ()
+
+eval :: Eval a => a -> CheckerWithValueM
+eval expression = do
   mem <- get
-  case runExcept $ runReaderT (evalM exp) mem of
+  case runExcept $ runReaderT (evalM expression) mem of
     Left tce -> throwError tce
     Right t  -> return t
