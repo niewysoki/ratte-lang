@@ -16,5 +16,5 @@ showP (Just (x, y)) = "line " ++ show x ++ ", column " ++ show y
 showP _             = "unknown position"
 
 instance Show RuntimeException where
-  show (DivideByZeroE pos) = prefix ++ "Division by zero at " ++ showP pos
-  show (UnknownE pos)       = prefix ++ "Unknown exception at " ++ showP pos
+  show (DivideByZeroE pos) = prefix ++ "division by zero at " ++ showP pos
+  show (UnknownE pos)      = prefix ++ "unknown exception at " ++ showP pos

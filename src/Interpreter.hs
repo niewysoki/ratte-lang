@@ -1,15 +1,11 @@
 {-# LANGUAGE LambdaCase #-}
-module Interpreter (interpretFile, interpret) where
+module Interpreter (interpret) where
 import           Control.Arrow           (ArrowChoice (left))
-import           Control.Monad           ((<=<))
 import           Evaluator.Evaluator     (eval)
 import           Generated.Parser        (myLexer, pProgram)
 import           System.Exit             (exitFailure, exitSuccess)
 import           System.IO               (hPrint, stderr)
 import           Typechecker.Typechecker (typecheck)
-
-interpretFile :: FilePath -> IO ()
-interpretFile = interpret <=< readFile
 
 exit :: IO (Either String a) -> IO ()
 exit computation = computation >>= \case

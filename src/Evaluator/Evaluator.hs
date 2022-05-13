@@ -22,14 +22,14 @@ instance Eval Init where
     modify $ putValue ident fun
     return ValEmpty
 
-  evalM (IVar pos _ _ _) = throwError $ UnknownE pos
-  evalM (IConst pos _ _ _) = throwError $ UnknownE pos
-  evalM (IConstInf pos _ _) = throwError $ UnknownE pos
-
   evalM (IVarInf _ ident exp) = do
     val <- evalM exp
     modify $ putValue ident val
     return ValEmpty
+
+  evalM (IVar pos _ _ _) = throwError $ UnknownE pos
+  evalM (IConst pos _ _ _) = throwError $ UnknownE pos
+  evalM (IConstInf pos _ _) = throwError $ UnknownE pos
 
 instance Eval Block where
   evalM (SBlock _ stmts) = do
@@ -91,6 +91,7 @@ instance Eval Expr where
   evalM (ENeg _ exp)  = do
     (ValInt x) <- evalM exp
     return . ValInt $ negate x
+
   evalM (ENot _ exp)  = do
     (ValBool x) <- evalM exp
     return . ValBool $ not x
@@ -154,7 +155,8 @@ guardReturn computation = do
   if ret then computation else return ValEmpty
 
 guardBuiltIn :: [Expr] -> Ident -> EvalM -> EvalM
-guardBuiltIn argExps ident computation = if isBuiltIn ident
+guardBuiltIn argExps ident computation = 
+  if isBuiltIn ident
   then mapM evalM argExps >>= evalBuiltIn ident
   else computation
 
