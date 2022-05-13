@@ -32,7 +32,7 @@ emptyMemory = Mem
   }
 
 getType :: Ident -> Memory -> Maybe ValueType
-getType ident = M.lookup ident . getEnvUnion
+getType = (. getEnvUnion) . M.lookup
 
 addType :: Ident -> ValueType -> Memory -> Memory
 addType ident t mem = mem {_env = M.insert ident t (_env mem)}
