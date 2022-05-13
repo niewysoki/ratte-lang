@@ -1,6 +1,7 @@
 module Evaluator.Exceptions (RuntimeException(..)) where
 
 import           Generated.Syntax (BNFC'Position)
+import Common.Utils
 
 type Pos = BNFC'Position
 
@@ -9,11 +10,7 @@ data RuntimeException
   | UnknownE Pos
 
 prefix :: String
-prefix = "RUNTIME EXCEPTION: "
-
-showP :: BNFC'Position -> String
-showP (Just (x, y)) = "line " ++ show x ++ ", column " ++ show y
-showP _             = "unknown position"
+prefix = "RUNTIME ERROR: "
 
 instance Show RuntimeException where
   show (DivideByZeroE pos) = prefix ++ "division by zero at " ++ showP pos

@@ -38,10 +38,10 @@ expectInitAnyTypeM pos id expT mut = do
   modify $ addType id (expT, mut)
 
 expectAssignmentM :: BNFC'Position -> Ident -> InternalType -> EmptyCheckerM
-expectAssignmentM pos ident t = do
+expectAssignmentM pos ident expT = do
   (t, mut) <- expectAndGetDefinedSymbolM pos ident
-  assertM (t == ITInt) (TypeMismatchE pos ITInt t)
-  assertM (mut == Mut) (ConstViolationE pos t)
+  assertM (canAssign t expT) (TypeMismatchE pos t expT)
+  assertM (mut == Mut) (ConstViolationE pos ident t)
 
 expectUniqueInitM :: Init -> EmptyCheckerM
 expectUniqueInitM init = expectUniqueOrShadowM (initGetPos init) (initGetIdent init)
@@ -54,7 +54,7 @@ expectReturnOccuredM pos = do
 expectUniqueOrShadowM :: BNFC'Position -> Ident -> EmptyCheckerM
 expectUniqueOrShadowM pos ident = do
   hasSym <- gets (hasSymbolInCurrentContext ident)
-  assertM (not hasSym) $ RedefinitionE pos ident
+  assertM (not hasSym) $ RedeclarationE pos ident
 
 expectMatchingArgsM :: BNFC'Position -> Ident -> [ValueType] -> [ValueType] -> EmptyCheckerM
 expectMatchingArgsM pos ident funArgTs appArgTs = do

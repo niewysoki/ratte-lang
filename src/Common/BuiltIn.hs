@@ -10,6 +10,7 @@ import           Evaluator.Memory
 import           Evaluator.Monads
 import           Generated.Syntax 
 import           Typechecker.Types
+import           Common.Utils
 
 printStr, showInt, showBoolean :: String
 printStr = "Println"
@@ -24,7 +25,7 @@ builtInFuncTypes = [
   ]
 
 builtInFuncNames :: [String]
-builtInFuncNames = map ((\ (Ident x) -> x) . fst) builtInFuncTypes
+builtInFuncNames = map (showI . fst) builtInFuncTypes
 
 isBuiltIn :: Ident -> Bool
 isBuiltIn (Ident name) = name `elem` builtInFuncNames

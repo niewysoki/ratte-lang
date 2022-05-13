@@ -5,6 +5,7 @@ module Typechecker.Types
   , InternalType(..)
   , CheckAssign(..)
   , Typing(..)
+  , showV
   ) where
 import           Data.List        (intercalate)
 import           Generated.Syntax
@@ -23,19 +24,16 @@ data InternalType
   deriving Eq
 
 instance Show InternalType where
-  show ITVoid = "Void"
-  show ITInt = "Int"
-  show ITStr = "Str"
-  show ITBool = "Bool"
-  show (ITFun argTs retT) = "(" ++ showArgs argTs ++ ") -> " ++ show retT where
-    showArgs = intercalate ", " . map showArg
-    showArg (t, Mut) = "mut " ++ show t
-    showArg (t, _)   = show t
+  show ITVoid = "<Void>"
+  show ITInt = "<Int>"
+  show ITStr = "<String>"
+  show ITBool = "<Boolean>"
+  show (ITFun argTs retT) = "<fn (" ++ intercalate ", " (map showV argTs) ++ ") -> " ++ show retT ++ ">"
   show _ = ""
 
-instance Show Mutability where
-  show Mut = "mut "
-  show Imm = ""
+showV :: ValueType -> String
+showV (t, Mut) = "mut " ++ show t
+showV (t, _) = show t
 
 class Typing a where
   convertType :: a -> InternalType
