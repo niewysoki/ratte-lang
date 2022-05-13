@@ -1,5 +1,36 @@
+fn A (a: String) -> Void {
+  let a = "xdd";
+  Println(a);
+  return;
+}
+
+fn X(a : Int) -> Int {
+  return a + 1;
+}
+
+fn Y(mut a : Int) -> Int {
+  a++;
+  return a;
+}
+
+fn B() -> fn (Int) -> Int {
+  return X;
+}
+
+let XD = | x: Int | -> fn (mut Int) -> Int {
+  let mut a = x;
+  return | x : Int | -> Int {
+    a = a + x;
+    return a;
+  };
+};
+
 fn Main () -> Void {
-  let a = 4;
-  let b = a / 0;
+  let mut a = 4;
+  Println("ok");
+  let f = XD(0);
+
+  Println(ShowInt(f(a)));
+  Println(ShowInt(f(a)));
   return;
 }

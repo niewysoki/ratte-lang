@@ -25,6 +25,7 @@ library ratte
   exposed-modules:
     Interpreter
     Common.BuiltIn
+    Common.Utils
     Evaluator.Evaluator
     Evaluator.Exceptions
     Evaluator.Memory
