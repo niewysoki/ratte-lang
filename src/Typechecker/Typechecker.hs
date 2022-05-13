@@ -31,74 +31,79 @@ instance Checker Init where
     modify $ addType id (funT, Imm)
     mem <- get
     modify $ addTypes $ zip argIds argTs
-    doNestedChecking (do
-      checkM (Just retT) block
-      Chck.expectReturnOccuredM pos)
-    put mem
+    Chck.doNestedChecking $ checkFunctionBody retT
+    put mem 
+    where
+      checkFunctionBody retT = do
+        checkM (Just retT) block
+        Chck.expectReturnOccuredM pos
 
-  checkM _ (IVar pos id t exp)    = checkVarInit pos id t exp Imm
-  checkM _ (IVarMut pos id t exp) = checkVarInit pos id t exp Mut
+  checkM _ (IVar pos id t exp) = do
+    (expT, _) <- eval exp
+    Chck.expectVarInitM pos id t expT Imm
+
+  checkM _ (IVarMut pos id t exp) = do
+    (expT, _) <- eval exp
+    Chck.expectVarInitM pos id t expT Mut
 
 instance Checker Block where
   checkM retT (SBlock _ stmts) = mapM_ (checkM retT) stmts
 
 instance Checker Stmt where
-  checkM _ (SEmpty _)            = return ()
-  checkM retT (SBStmt pos block) = doNestedChecking $ checkM retT block
-  checkM retT (SInit _ init)     = checkM retT init
+  checkM _ (SEmpty _) = return ()
+  checkM retT (SBStmt pos block) = Chck.doNestedChecking $ checkM retT block
+  checkM retT (SInit _ init) = checkM retT init
+  checkM _ (SDecr pos ident) = Chck.expectAssignmentM pos ident ITInt
+  checkM _ (SIncr pos ident) = Chck.expectAssignmentM pos ident ITInt
+  checkM Nothing (SRet pos _) = throwError $ ReturnOutOfScopeE pos
+  checkM Nothing (SVRet pos) = throwError $ ReturnOutOfScopeE pos
+
+  checkM retT (SCond pos cond block) = do
+    (t, _) <- eval cond
+    Comm.assertM (t == ITBool) $ TypeMismatchE pos t ITBool
+    Chck.doNestedChecking $ checkM retT block
+
+  checkM retT (SCondElse pos cond block block') = do
+    (t, _) <- eval cond
+    Comm.assertM (t == ITBool) $ TypeMismatchE pos t ITBool
+    Chck.doNestedChecking $ checkM retT block
+    Chck.doNestedChecking $ checkM retT block'
+
+  checkM retT (SWhile pos cond block) = do
+    (t, _) <- eval cond
+    Comm.assertM (t == ITBool) $ TypeMismatchE pos t ITBool
+    Chck.doNestedChecking $ checkM retT block
+
+  checkM _ (SExp pos exp) = do
+    (t, _) <- eval exp
+    Comm.assertM (t == ITVoid) $ TypeMismatchE pos t ITVoid
 
   checkM _ (SAss pos ident exp) = do
-    (t, mut) <- Chck.expectAndGetDefinedSymbolM pos ident
-    (t', _) <- eval exp
-    Comm.assertM (canAssign t t') (TypeMismatchE pos t t')
-    Comm.assertM (mut == Mut) (ConstViolationE pos t)
+    (t, _) <- eval exp
+    Chck.expectAssignmentM pos ident t
 
-  checkM _ (SIncr pos ident) = do
-    (t, mut) <- Chck.expectAndGetDefinedSymbolM pos ident
-    Comm.assertM (t == ITInt) (TypeMismatchE pos ITInt t)
-    Comm.assertM (mut == Mut) (ConstViolationE pos t)
-
-  checkM retT (SDecr pos ident) = checkM retT (SIncr pos ident)
-
-  checkM Nothing (SRet pos _) = throwError $ ReturnOutOfScopeE pos
   checkM (Just retT) (SRet pos exp) = do
     (expT, _) <- eval exp
     Comm.assertM (canAssign retT expT) (ReturnTypeMismatchE pos retT expT)
     modify setReturn
 
-  checkM Nothing (SVRet pos) = throwError $ ReturnOutOfScopeE pos
   checkM (Just retT) (SVRet pos) = do
-    Comm.assertM (retT == ITVoid) (ReturnTypeMismatchE pos ITVoid retT)
+    Comm.assertM (canAssign retT ITVoid) (ReturnTypeMismatchE pos ITVoid retT)
     modify setReturn
 
-  checkM retT (SCond pos cond block) = do
-    expectTypeM pos cond ITBool
-    doNestedChecking $ checkM retT block
-
-  checkM retT (SCondElse pos cond block block') = do
-    expectTypeM pos cond ITBool
-    doNestedChecking $ checkM retT block
-    doNestedChecking $ checkM retT block'
-
-  checkM retT (SWhile pos cond block) = do
-    expectTypeM pos cond ITBool
-    doNestedChecking $ checkM retT block
-
-  checkM _ (SExp pos exp) = expectTypeM pos exp ITVoid
-
 instance Eval Expr where
-  evalM (ELitInt _ _)          = return (ITInt, Imm)
-  evalM (ELitFalse _)          = return (ITBool, Imm)
-  evalM (ELitTrue _)           = return (ITBool, Imm)
-  evalM (EString _ _)          = return (ITStr, Imm)
-  evalM (ENeg pos exp)         = mapM evalM [exp] >>= Eval.expectSimpleTypesM pos ITInt ITInt
-  evalM (ENot pos exp)         = mapM evalM [exp] >>= Eval.expectSimpleTypesM pos ITBool ITBool
+  evalM (ELitInt _ _) = return (ITInt, Imm)
+  evalM (ELitFalse _) = return (ITBool, Imm)
+  evalM (ELitTrue _) = return (ITBool, Imm)
+  evalM (EString _ _) = return (ITStr, Imm)
+  evalM (ENeg pos exp) = mapM evalM [exp] >>= Eval.expectSimpleTypesM pos ITInt ITInt
+  evalM (ENot pos exp) = mapM evalM [exp] >>= Eval.expectSimpleTypesM pos ITBool ITBool
   evalM (EMul pos exp1 _ exp2) = mapM evalM [exp1, exp2] >>= Eval.expectSimpleTypesM pos ITInt ITInt
   evalM (EAdd pos exp1 _ exp2) = mapM evalM [exp1, exp2] >>= Eval.expectSimpleTypesM pos ITInt ITInt
   evalM (ERel pos exp1 _ exp2) = mapM evalM [exp1, exp2] >>= Eval.expectSimpleTypesM pos ITInt ITBool
-  evalM (EAnd pos exp1 exp2)   = mapM evalM [exp1, exp2] >>= Eval.expectSimpleTypesM pos ITBool ITBool
-  evalM (EOr pos exp1 exp2)    = mapM evalM [exp1, exp2] >>= Eval.expectSimpleTypesM pos ITBool ITBool
-  evalM (EVar pos ident)       = Eval.expectAndGetDefinedSymbolM pos ident
+  evalM (EAnd pos exp1 exp2) = mapM evalM [exp1, exp2] >>= Eval.expectSimpleTypesM pos ITBool ITBool
+  evalM (EOr pos exp1 exp2) = mapM evalM [exp1, exp2] >>= Eval.expectSimpleTypesM pos ITBool ITBool
+  evalM (EVar pos ident) = Eval.expectAndGetDefinedSymbolM pos ident
 
   evalM (EApp pos ident args) = do
     (t, _) <- Eval.expectAndGetDefinedSymbolM pos ident
@@ -121,24 +126,3 @@ eval exp = do
   case runExcept $ runReaderT (evalM exp) mem of
     Left tce -> throwError tce
     Right t  -> return t
-
-expectTypeM :: BNFC'Position -> Expr -> InternalType -> CheckerM
-expectTypeM pos cond t = do
-  mem <- get
-  (condT, _) <- eval cond
-  Comm.assertM (condT == t) $ TypeMismatchE pos condT t
-
-checkVarInit :: BNFC'Position -> Ident -> Type -> Expr -> Mutability -> CheckerM
-checkVarInit pos id t exp mut = do
-  Chck.expectUniqueOrShadowM pos id
-  (expT, _) <- eval exp
-  let varT = convertType t
-  Comm.assertM (canAssign varT expT) (TypeMismatchE pos varT expT)
-  modify $ addType id (expT, mut)
-
-doNestedChecking :: CheckerM -> CheckerM
-doNestedChecking checking = do
-  mem <- get
-  modify setOuterEnv
-  checking
-  put mem
