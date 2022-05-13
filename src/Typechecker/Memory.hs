@@ -10,9 +10,8 @@ module Typechecker.Memory
   , hasSymbolInCurrentContext
   ) where
 
-import           Common.BuiltIn    (builtInFuncTypes)
-import           Data.Map          as M (Map, empty, fromList, insert, lookup,
-                                         member, union)
+import           Common.BuiltIn
+import           Data.Map          as M
 import           Generated.Syntax
 import           Typechecker.Types
 

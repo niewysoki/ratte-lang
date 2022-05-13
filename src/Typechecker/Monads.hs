@@ -5,7 +5,6 @@ module Typechecker.Monads
   , Eval(evalM)
   ) where
 import           Control.Monad.Except   (Except)
-import           Control.Monad.Reader   (ReaderT)
 import           Control.Monad.State    (StateT)
 import           Typechecker.Exceptions
 import           Typechecker.Memory

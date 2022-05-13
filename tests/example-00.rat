@@ -1,0 +1,5 @@
+fn Main () -> Void {
+  let a = 4;
+  let b = a / 0;
+  return;
+}

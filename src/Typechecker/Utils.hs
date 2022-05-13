@@ -1,22 +1,29 @@
-module Typechecker.Common
+module Typechecker.Utils
   ( assertM
-  , expectUniqueArgumentsM
+  , doNestedChecking
   , initGetIdent
   , initGetPos
   , getArgIdent
+  , validateFunArgs
   ) where
 import           Control.Monad.Except (MonadError (throwError))
+import           Control.Monad.State  (MonadState (..), modify)
 import           Data.List            (nub)
 import           Generated.Syntax
+import           Typechecker.Memory
+import           Typechecker.Monads
+
+doNestedChecking :: CheckerM a -> CheckerM a
+doNestedChecking checking = do
+  mem <- get
+  modify setOuterEnv
+  ret <- checking
+  put mem
+  return ret
 
 assertM :: MonadError e m => Bool -> e -> m ()
 assertM False ex = throwError ex
 assertM _ _      = return ()
-
-expectUniqueArgumentsM :: MonadError e m => [Arg] -> e -> m ()
-expectUniqueArgumentsM args ex = do
-  let ret = validateFunArgs args
-  assertM ret ex
 
 initGetIdent :: Init -> Ident
 initGetIdent (IFn _ ident _ _ _)   = ident

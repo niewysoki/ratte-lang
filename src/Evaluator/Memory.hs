@@ -77,6 +77,7 @@ putArgVal :: (Arg, Value, ArgSource) -> Memory -> Memory
 putArgVal (IArg _ ident _, val, _)           = putValue ident val
 putArgVal (IArgMut _ ident _, _, ArgLoc loc) = bindLoc ident loc where
   bindLoc ident loc mem = mem {_env = M.insert ident loc (_env mem)}
+putArgVal _ = id
 
 putArgValsLocs :: [(Arg, Value, ArgSource)] -> Memory -> Memory
 putArgValsLocs = flip $ foldr putArgVal
