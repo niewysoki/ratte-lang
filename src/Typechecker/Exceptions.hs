@@ -9,8 +9,7 @@ data TypeCheckingException
   | UndefinedSymbolE Pos Ident
   | NotCallableE Pos InternalType
   | ArgumentCountMismatchE Pos Ident Int Int
-  | ArgumentTypesMismatchE Pos InternalType InternalType
-  | ArgumentConstViolationE Pos InternalType
+  | ArgumentTypesMismatchE Pos ValueType ValueType
   | TypeMismatchE Pos InternalType InternalType
   | ConstViolationE Pos InternalType
   | RedeclarationE Pos Ident Pos

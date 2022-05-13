@@ -20,17 +20,13 @@ expectMatchingArgsM :: BNFC'Position -> Ident -> [ValueType] -> [ValueType] -> E
 expectMatchingArgsM pos ident funArgTs appArgTs = do
   assertM (funArgCount == appArgCount) (ArgumentCountMismatchE pos ident funArgCount appArgCount)
   mapM_ (expectArgTypesM pos) argPairs
-  mapM_ (expectArgConstM pos) argPairs
   where
     funArgCount = length funArgTs :: Int
     appArgCount = length appArgTs :: Int
     argPairs = zip funArgTs appArgTs :: [(ValueType, ValueType)]
 
-    expectArgTypesM :: BNFC'Position -> (ValueType, ValueType) -> EvalWithoutValueM
-    expectArgTypesM pos ((t, _), (t', _)) = assertM (canApply t t') $ ArgumentTypesMismatchE pos t t'
-
-    expectArgConstM :: BNFC'Position -> (ValueType, ValueType) -> EvalWithoutValueM
-    expectArgConstM pos ((t, mut), (_, mut')) = assertM (canAssign mut mut') $ ArgumentConstViolationE pos t
+expectArgTypesM :: BNFC'Position -> (ValueType, ValueType) -> EvalWithoutValueM
+expectArgTypesM pos (t, t') = assertM (canAssign t t') $ ArgumentTypesMismatchE pos t t'
 
 expectFunctionTypeM :: BNFC'Position -> InternalType -> EvalWithoutValueM
 expectFunctionTypeM pos fun@(ITFun _ _) = return ()

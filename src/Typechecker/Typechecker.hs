@@ -50,7 +50,7 @@ instance Checker Stmt where
   checkM _ (SAss pos ident exp) = do
     (t, mut) <- Chck.expectAndGetDefinedSymbolM pos ident
     (t', _) <- eval exp
-    Comm.assertM (t == t') (TypeMismatchE pos t t')
+    Comm.assertM (canAssign t t') (TypeMismatchE pos t t')
     Comm.assertM (mut == Mut) (ConstViolationE pos t)
 
   checkM _ (SIncr pos ident) = do
@@ -63,7 +63,7 @@ instance Checker Stmt where
   checkM Nothing (SRet pos _) = throwError $ ReturnOutOfScopeE pos
   checkM (Just retT) (SRet pos exp) = do
     (expT, _) <- eval exp
-    Comm.assertM (expT == retT) (ReturnTypeMismatchE pos retT expT)
+    Comm.assertM (canAssign retT expT) (ReturnTypeMismatchE pos retT expT)
     modify setReturn
 
   checkM Nothing (SVRet pos) = throwError $ ReturnOutOfScopeE pos
@@ -115,7 +115,6 @@ instance Eval Expr where
     --local  (addTypes (zip argIds argTs)) TODO
     return (funT, Imm)
 
-
 eval :: Expr -> CheckerWithValueM
 eval exp = do
   mem <- get
@@ -134,7 +133,7 @@ checkVarInit pos id t exp mut = do
   Chck.expectUniqueOrShadowM pos id
   (expT, _) <- eval exp
   let varT = convertType t
-  Comm.assertM (expT == varT) (TypeMismatchE pos varT expT)
+  Comm.assertM (canAssign varT expT) (TypeMismatchE pos varT expT)
   modify $ addType id (expT, mut)
 
 doNestedChecking :: CheckerM -> CheckerM

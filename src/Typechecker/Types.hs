@@ -1,11 +1,10 @@
 {-# LANGUAGE FlexibleInstances #-}
-module Typechecker.Types 
+module Typechecker.Types
   ( ValueType
   , Mutability(..)
   , InternalType(..)
-  , canAssign
-  , canApply
-  , convertType
+  , CheckAssign(..)
+  , Typing(..)
   ) where
 import           Data.List
 import           Generated.Syntax
@@ -23,16 +22,6 @@ data InternalType
   | ITFun [ValueType] InternalType
   deriving Eq
 
-canAssign :: Mutability -> Mutability -> Bool
-canAssign Imm Mut = False
-canAssign _ _ = True
-
-canApply :: InternalType -> InternalType -> Bool
-canApply (ITFun argTs retT) (ITFun argTs' retT') = retT == retT' && validArgPairs where
-  validArgPairs = all validate $ zip argTs argTs'
-  validate ((t, mut), (t', mut')) = t == t' && canAssign mut mut'
-canApply t t' = t == t'
-
 instance Show InternalType where
   show ITVoid = "Void"
   show ITInt = "Int"
@@ -43,6 +32,10 @@ instance Show InternalType where
     showArg (t, Mut) = "mut " ++ show t
     showArg (t, _)   = show t
   show _ = ""
+
+instance Show Mutability where
+  show Mut = "mut "
+  show Imm = ""
 
 class Typing a where
   convertType :: a -> InternalType
@@ -70,3 +63,17 @@ instance Typing ([Arg], Type) where
     argTs = zip <$> map convertType <*> map getMutability $ args
     getMutability IArg {}    = Imm
     getMutability IArgMut {} = Mut
+
+class CheckAssign a where
+  canAssign :: a -> a -> Bool
+
+instance CheckAssign ValueType where
+  canAssign (t, mut) (t', mut') = canAssign t t' && canAssign mut mut'
+
+instance CheckAssign Mutability where
+  canAssign Mut Imm = False
+  canAssign _ _     = True
+
+instance CheckAssign InternalType where
+  canAssign (ITFun argTs retT) (ITFun argTs' retT') = canAssign retT' retT && all (== True) (zipWith canAssign argTs' argTs)
+  canAssign t t' = t == t'
