@@ -1,4 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleContexts #-}
 module Typechecker.Typechecker (typecheck) where
 import           Control.Monad.Except   (MonadError (throwError), runExcept)
 import           Control.Monad.Reader   (MonadReader (ask, local),
@@ -22,8 +24,9 @@ typecheck p = do
 instance Checker Program where
   checkM _ (PProgram pos inits) = do
     mapM_ Chck.expectUniqueInitM inits
-    mapM_ (checkM Nothing) inits
+    inits' <- mapM (checkM Nothing) inits
     checkM Nothing $ SExp pos $ EApp pos (Ident "Main") []
+    return $ PProgram pos inits'
 
 instance Checker Init where
   checkM _ (IFn pos id args ret block) = do
@@ -31,65 +34,85 @@ instance Checker Init where
     let funT@(ITFun argTs retT) = convertType (args, ret)
     let argIds = map getArgIdent args
     modify $ addType id (funT, Imm)
-    mem <- get
-    modify $ addTypes $ zip argIds argTs
-    Chck.doNestedChecking (do
-      checkM (Just retT) block
-      Chck.expectReturnOccuredM pos)
-    put mem
+    block' <- checkFunctionBodyM pos retT (zip argIds argTs) block
+    return $ IFn pos id args ret block'
 
-  checkM _ (IVar pos id t exp) = do
-    (expT, _) <- eval exp
+  checkM _ v@(IVar pos id t exp) = do
+    (expT, _) <- evalM exp
     Chck.expectVarInitM pos id t expT Imm
+    return v
 
-  checkM _ (IVarMut pos id t exp) = do
-    (expT, _) <- eval exp
+  checkM _ v@(IVarMut pos id t exp) = do
+    (expT, _) <- evalM exp
     Chck.expectVarInitM pos id t expT Mut
+    return v
 
 instance Checker Block where
-  checkM retT (SBlock _ stmts) = mapM_ (checkM retT) stmts
+  checkM retT (SBlock pos stmts) = do
+    stmts' <- mapM (checkM retT) stmts
+    return $ SBlock pos stmts'
 
 instance Checker Stmt where
-  checkM _ (SEmpty _) = return ()
-  checkM retT (SBStmt pos block) = Chck.doNestedChecking $ checkM retT block
-  checkM retT (SInit _ init) = checkM retT init
-  checkM _ (SDecr pos ident) = Chck.expectAssignmentM pos ident ITInt
-  checkM _ (SIncr pos ident) = Chck.expectAssignmentM pos ident ITInt
+  checkM _ s@(SEmpty _) = return s
+
+  checkM retT (SBStmt pos block) = do
+    block' <- Chck.doNestedChecking $ checkM retT block
+    return $ SBStmt pos block'
+
+  checkM retT (SInit pos init) = do
+    init' <- checkM retT init
+    return $ SInit pos init'
+
+  checkM _ s@(SDecr pos ident) = do
+    Chck.expectAssignmentM pos ident ITInt
+    return s
+
+  checkM _ s@(SIncr pos ident) = do
+    Chck.expectAssignmentM pos ident ITInt
+    return s
+
   checkM Nothing (SRet pos _) = throwError $ ReturnOutOfScopeE pos
   checkM Nothing (SVRet pos) = throwError $ ReturnOutOfScopeE pos
 
   checkM retT (SCond pos cond block) = do
-    (t, _) <- eval cond
+    (t, _) <- evalM cond
     Comm.assertM (t == ITBool) $ TypeMismatchE pos t ITBool
-    Chck.doNestedChecking $ checkM retT block
+    block' <- Chck.doNestedChecking $ checkM retT block
+    return $ SCond pos cond block'
 
-  checkM retT (SCondElse pos cond block block') = do
-    (t, _) <- eval cond
+  checkM retT (SCondElse pos cond blockT blockF) = do
+    (t, _) <- evalM cond
     Comm.assertM (t == ITBool) $ TypeMismatchE pos t ITBool
-    Chck.doNestedChecking $ checkM retT block
-    Chck.doNestedChecking $ checkM retT block'
+    blockT' <- Chck.doNestedChecking $ checkM retT blockT
+    blockF' <- Chck.doNestedChecking $ checkM retT blockF
+    return $ SCondElse pos cond blockT' blockF'
 
   checkM retT (SWhile pos cond block) = do
-    (t, _) <- eval cond
+    (t, _) <- evalM cond
     Comm.assertM (t == ITBool) $ TypeMismatchE pos t ITBool
-    Chck.doNestedChecking $ checkM retT block
+    block' <- Chck.doNestedChecking $ checkM retT block
+    return $ SWhile pos cond block'
 
-  checkM _ (SExp pos exp) = do
-    (t, _) <- eval exp
+  checkM _ s@(SExp pos exp) = do
+    (t, _) <- evalM exp
     Comm.assertM (t == ITVoid) $ TypeMismatchE pos t ITVoid
+    return s
 
-  checkM _ (SAss pos ident exp) = do
-    (t, _) <- eval exp
+  checkM _ s@(SAss pos ident exp) = do
+    (t, _) <- evalM exp
     Chck.expectAssignmentM pos ident t
+    return s
 
-  checkM (Just retT) (SRet pos exp) = do
-    (expT, _) <- eval exp
+  checkM (Just retT) s@(SRet pos exp) = do
+    (expT, _) <- evalM  exp
     Comm.assertM (canAssign retT expT) (ReturnTypeMismatchE pos retT expT)
     modify setReturn
+    return s
 
-  checkM (Just retT) (SVRet pos) = do
+  checkM (Just retT) s@(SVRet pos) = do
     Comm.assertM (canAssign retT ITVoid) (ReturnTypeMismatchE pos ITVoid retT)
     modify setReturn
+    return s
 
 instance Eval Expr where
   evalM (ELitInt _ _) = return (ITInt, Imm)
@@ -117,20 +140,12 @@ instance Eval Expr where
     Comm.expectUniqueArgumentsM args $ ArgumentRedefinitionE pos
     let funT@(ITFun argTs retT) = convertType (args, ret)
     let argIds = map getArgIdent args
-    let chk = local setOuterEnv $ check (Just retT) block
-    local (addTypes $ zip argIds argTs) chk
+    checkFunctionBodyM pos retT (zip argIds argTs) block
     return (funT, Imm)
 
-check :: Checker a => Maybe InternalType -> a -> EvalWithoutValueM
-check ret program = do
-  mem <- ask
-  case runExcept $ runStateT (checkM ret program) mem of
-    Left tce -> throwError tce
-    Right _  -> return ()
-
-eval :: Eval a => a -> CheckerWithValueM
-eval expression = do
-  mem <- get
-  case runExcept $ runReaderT (evalM expression) mem of
-    Left tce -> throwError tce
-    Right t  -> return t
+checkFunctionBodyM :: Checker a => BNFC'Position -> InternalType -> [(Ident, ValueType)] -> a -> CheckerM a
+checkFunctionBodyM pos retT args block = Chck.doNestedChecking $ do
+  modify $ addTypes args
+  block' <- checkM (Just retT) block
+  Chck.expectReturnOccuredM pos
+  return block'

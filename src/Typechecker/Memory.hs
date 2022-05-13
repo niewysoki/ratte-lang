@@ -13,8 +13,8 @@ module Typechecker.Memory
 import           Common.BuiltIn    (builtInFuncTypes)
 import           Data.Map          as M (Map, empty, fromList, insert, lookup,
                                          member, union)
-import           Generated.Syntax  (Ident)
-import           Typechecker.Types (ValueType)
+import           Generated.Syntax
+import           Typechecker.Types
 
 type Env = M.Map Ident ValueType
 

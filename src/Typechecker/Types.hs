@@ -6,7 +6,7 @@ module Typechecker.Types
   , CheckAssign(..)
   , Typing(..)
   ) where
-import           Data.List
+import           Data.List        (intercalate)
 import           Generated.Syntax
 
 type ValueType = (InternalType, Mutability)

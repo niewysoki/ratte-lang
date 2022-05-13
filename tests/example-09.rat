@@ -1,5 +1,5 @@
 fn TestShadowingVariable() -> Void {
-  let a: Int = 0;
+  let mut a: Int = 0;
   let x: Int = 10;
 
   while (a < 20) {

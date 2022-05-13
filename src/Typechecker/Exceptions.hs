@@ -1,6 +1,6 @@
 module Typechecker.Exceptions (TypeCheckingException(..)) where
-import           Generated.Syntax  (BNFC'Position, Ident)
-import           Typechecker.Types (InternalType, ValueType)
+import           Generated.Syntax
+import           Typechecker.Types
 
 type Pos = BNFC'Position
 

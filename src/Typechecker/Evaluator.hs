@@ -7,17 +7,17 @@ module Typechecker.Evaluator
   ) where
 
 import           Control.Monad.Except   (MonadError (throwError))
-import           Control.Monad.Reader   (asks)
+import           Control.Monad.State    (gets)
 import           Data.Foldable          (find)
 import           Data.Maybe             (fromMaybe)
-import           Generated.Syntax       (BNFC'Position, Ident)
-import           Typechecker.Common     (assertM)
+import           Generated.Syntax
+import           Typechecker.Common
 import           Typechecker.Exceptions
-import           Typechecker.Memory     (getType)
-import           Typechecker.Monads     (EvalM, EvalWithoutValueM)
+import           Typechecker.Memory
+import           Typechecker.Monads
 import           Typechecker.Types
 
-expectMatchingArgsM :: BNFC'Position -> Ident -> [ValueType] -> [ValueType] -> EvalWithoutValueM
+expectMatchingArgsM :: BNFC'Position -> Ident -> [ValueType] -> [ValueType] -> CheckerM ()
 expectMatchingArgsM pos ident funArgTs appArgTs = do
   assertM (funArgCount == appArgCount) (ArgumentCountMismatchE pos ident funArgCount appArgCount)
   mapM_ (expectArgTypesM pos) argPairs
@@ -26,21 +26,21 @@ expectMatchingArgsM pos ident funArgTs appArgTs = do
     appArgCount = length appArgTs :: Int
     argPairs = zip funArgTs appArgTs :: [(ValueType, ValueType)]
 
-expectArgTypesM :: BNFC'Position -> (ValueType, ValueType) -> EvalWithoutValueM
+expectArgTypesM :: BNFC'Position -> (ValueType, ValueType) -> CheckerM ()
 expectArgTypesM pos (t, t') = assertM (canAssign t t') $ ArgumentTypesMismatchE pos t t'
 
-expectFunctionTypeM :: BNFC'Position -> InternalType -> EvalWithoutValueM
+expectFunctionTypeM :: BNFC'Position -> InternalType -> CheckerM ()
 expectFunctionTypeM pos fun@(ITFun _ _) = return ()
 expectFunctionTypeM pos t               = throwError $ NotCallableE pos t
 
-expectAndGetDefinedSymbolM :: BNFC'Position -> Ident -> EvalM
+expectAndGetDefinedSymbolM :: BNFC'Position -> Ident -> CheckerM ValueType
 expectAndGetDefinedSymbolM pos ident = do
-  maybeType <- asks (getType ident)
+  maybeType <- gets (getType ident)
   case maybeType of
     Just t  -> return t
     Nothing -> throwError $ UndefinedSymbolE pos ident
 
-expectSimpleTypesM :: BNFC'Position -> InternalType -> InternalType -> [ValueType] -> EvalM
+expectSimpleTypesM :: BNFC'Position -> InternalType -> InternalType -> [ValueType] -> CheckerM ValueType
 expectSimpleTypesM pos expT retT types = do
   let t = fromMaybe expT . find (/= expT) $ map fst types
   assertM (expT == t) (InvalidTypeE pos expT t)
