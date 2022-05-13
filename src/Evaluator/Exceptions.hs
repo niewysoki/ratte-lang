@@ -6,7 +6,7 @@ type Pos = BNFC'Position
 
 data RuntimeException
   = DivideByZeroE Pos
-  | UnkownE Pos
+  | UnknownE Pos
 
 prefix :: String
 prefix = "RUNTIME EXCEPTION: "
@@ -17,4 +17,4 @@ showP _             = "unknown position"
 
 instance Show RuntimeException where
   show (DivideByZeroE pos) = prefix ++ "Division by zero at " ++ showP pos
-  show (UnkownE pos)       = prefix ++ "Unknown exception at " ++ showP pos
+  show (UnknownE pos)       = prefix ++ "Unknown exception at " ++ showP pos

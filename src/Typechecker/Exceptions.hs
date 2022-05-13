@@ -17,4 +17,6 @@ data TypeCheckingException
   | ReturnTypeMismatchE Pos InternalType InternalType
   | NoReturnStatementE Pos
   | ArgumentRedefinitionE Pos
-  | RedefinitionE Pos Ident deriving Show
+  | RedefinitionE Pos Ident 
+  | VoidAssignmentE Pos
+  deriving Show

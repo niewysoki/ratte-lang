@@ -10,9 +10,13 @@ separator nonempty Init "" ;
 
 IFn.	     Init ::= "fn" Ident "(" [Arg] ")" "->" Type Block ;
 
-IVarMut.   Init ::= "let" "mut" Ident ":" Type "=" Expr ";" ;
+IVar.      Init ::= "let" "mut" Ident ":" Type "=" Expr ";" ;
 
-IVar.      Init ::= "let" Ident ":" Type "=" Expr ";" ;
+IConst.    Init ::= "let" Ident ":" Type "=" Expr ";" ;
+
+IVarInf.   Init ::= "let" "mut" Ident "=" Expr ";" ;
+
+IConstInf. Init ::= "let" Ident "=" Expr ";" ;
 
 separator  Arg "," ;
 

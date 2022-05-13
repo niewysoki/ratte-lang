@@ -25,8 +25,10 @@ data Program' a = PProgram a [Init' a]
 type Init = Init' BNFC'Position
 data Init' a
     = IFn a Ident [Arg' a] (Type' a) (Block' a)
-    | IVarMut a Ident (Type' a) (Expr' a)
     | IVar a Ident (Type' a) (Expr' a)
+    | IConst a Ident (Type' a) (Expr' a)
+    | IVarInf a Ident (Expr' a)
+    | IConstInf a Ident (Expr' a)
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Functor, C.Foldable, C.Traversable)
 
 type Arg = Arg' BNFC'Position
@@ -121,8 +123,10 @@ instance HasPosition Program where
 instance HasPosition Init where
   hasPosition = \case
     IFn p _ _ _ _ -> p
-    IVarMut p _ _ _ -> p
     IVar p _ _ _ -> p
+    IConst p _ _ _ -> p
+    IVarInf p _ _ -> p
+    IConstInf p _ _ -> p
 
 instance HasPosition Arg where
   hasPosition = \case

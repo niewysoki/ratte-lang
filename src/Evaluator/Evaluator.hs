@@ -3,9 +3,9 @@ module Evaluator.Evaluator (eval) where
 import           Common.BuiltIn       (evalBuiltIn, isBuiltIn)
 import           Control.Monad.Except (MonadError (throwError), runExceptT)
 import           Control.Monad.State  (evalStateT, gets, modify)
-import           Evaluator.Exceptions (RuntimeException (DivideByZeroE))
+import           Evaluator.Exceptions
 import           Evaluator.Memory
-import           Evaluator.Monads     (Eval (..), EvalM)
+import           Evaluator.Monads
 import           Generated.Syntax
 
 eval :: Program -> IO (Either RuntimeException Value)
@@ -22,12 +22,11 @@ instance Eval Init where
     modify $ putValue ident fun
     return ValEmpty
 
-  evalM (IVarMut _ ident _ exp) = do
-    val <- evalM exp
-    modify $ putValue ident val
-    return ValEmpty
+  evalM (IVar pos _ _ _) = throwError $ UnknownE pos
+  evalM (IConst pos _ _ _) = throwError $ UnknownE pos
+  evalM (IConstInf pos _ _) = throwError $ UnknownE pos
 
-  evalM (IVar _ ident _ exp) = do
+  evalM (IVarInf _ ident exp) = do
     val <- evalM exp
     modify $ putValue ident val
     return ValEmpty

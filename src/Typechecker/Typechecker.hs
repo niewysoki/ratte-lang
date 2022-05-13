@@ -17,9 +17,7 @@ import           Typechecker.Monads
 import           Typechecker.Types
 
 typecheck :: Program -> Either TypeCheckingException Program
-typecheck p = do
-  runExcept $ evalStateT (checkM Nothing p) emptyMemory
-  return p
+typecheck p = runExcept $ evalStateT (checkM Nothing p) emptyMemory
 
 instance Checker Program where
   checkM _ (PProgram pos inits) = do
@@ -37,14 +35,24 @@ instance Checker Init where
     block' <- checkFunctionBodyM pos retT (zip argIds argTs) block
     return $ IFn pos id args ret block'
 
-  checkM _ v@(IVar pos id t exp) = do
+  checkM _ v@(IConst pos id t exp) = do
     (expT, _) <- evalM exp
-    Chck.expectVarInitM pos id t expT Imm
-    return v
+    Chck.expectInitTypeM pos id t expT Imm
+    return $ IVarInf pos id exp
 
-  checkM _ v@(IVarMut pos id t exp) = do
+  checkM _ (IVar pos id t exp) = do
     (expT, _) <- evalM exp
-    Chck.expectVarInitM pos id t expT Mut
+    Chck.expectInitTypeM pos id t expT Mut
+    return $ IVarInf pos id exp
+
+  checkM _ v@(IConstInf pos id exp) = do
+    (expT, _) <- evalM exp
+    Chck.expectInitAnyTypeM pos id expT Imm
+    return $ IVarInf pos id exp
+
+  checkM _ v@(IVarInf pos id exp) = do
+    (expT, _) <- evalM exp
+    Chck.expectInitAnyTypeM pos id expT Mut
     return v
 
 instance Checker Block where
@@ -110,7 +118,7 @@ instance Checker Stmt where
     return s
 
   checkM (Just retT) s@(SVRet pos) = do
-    Comm.assertM (canAssign retT ITVoid) (ReturnTypeMismatchE pos ITVoid retT)
+    Comm.assertM (retT == ITVoid) (ReturnTypeMismatchE pos ITVoid retT)
     modify setReturn
     return s
 

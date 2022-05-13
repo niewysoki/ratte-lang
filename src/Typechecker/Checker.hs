@@ -1,9 +1,11 @@
 module Typechecker.Checker
   ( expectAssignmentM
-  , expectVarInitM
+  , expectInitTypeM
+  , expectInitAnyTypeM
   , expectUniqueInitM
   , expectReturnOccuredM
   , doNestedChecking
+  , expectUniqueOrShadowM
   ) where
 import           Control.Monad.Except   (MonadError (throwError))
 import           Control.Monad.State    (MonadState (get, put), gets, modify)
@@ -22,28 +24,35 @@ doNestedChecking checking = do
   put mem
   return ret
 
-expectVarInitM :: BNFC'Position -> Ident -> Type -> InternalType -> Mutability -> CheckerM ()
-expectVarInitM pos id t expT mut = do
+expectInitTypeM :: BNFC'Position -> Ident -> Type -> InternalType -> Mutability -> EmptyCheckerM
+expectInitTypeM pos id t expT mut = do
   expectUniqueOrShadowM pos id
   let varT = convertType t
+  assertM (expT /= ITVoid) (VoidAssignmentE pos)
   assertM (canAssign varT expT) (TypeMismatchE pos varT expT)
   modify $ addType id (expT, mut)
 
-expectAssignmentM :: BNFC'Position -> Ident -> InternalType -> CheckerM ()
+expectInitAnyTypeM :: BNFC'Position -> Ident -> InternalType -> Mutability -> EmptyCheckerM
+expectInitAnyTypeM pos id expT mut = do
+  expectUniqueOrShadowM pos id
+  assertM (expT /= ITVoid) (VoidAssignmentE pos)
+  modify $ addType id (expT, mut)
+
+expectAssignmentM :: BNFC'Position -> Ident -> InternalType -> EmptyCheckerM
 expectAssignmentM pos ident t = do
   (t, mut) <- expectAndGetDefinedSymbolM pos ident
   assertM (t == ITInt) (TypeMismatchE pos ITInt t)
   assertM (mut == Mut) (ConstViolationE pos t)
 
-expectUniqueInitM :: Init -> CheckerM ()
+expectUniqueInitM :: Init -> EmptyCheckerM
 expectUniqueInitM init = expectUniqueOrShadowM (initGetPos init) (initGetIdent init)
 
-expectReturnOccuredM :: BNFC'Position -> CheckerM ()
+expectReturnOccuredM :: BNFC'Position -> EmptyCheckerM
 expectReturnOccuredM pos = do
   ret <- gets hasReturn
   assertM ret $ NoReturnStatementE pos
 
-expectUniqueOrShadowM :: BNFC'Position -> Ident -> CheckerM ()
+expectUniqueOrShadowM :: BNFC'Position -> Ident -> EmptyCheckerM
 expectUniqueOrShadowM pos ident = do
   hasSym <- gets (hasSymbolInCurrentContext ident)
   assertM (not hasSym) $ RedefinitionE pos ident

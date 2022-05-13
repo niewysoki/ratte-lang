@@ -17,7 +17,7 @@ import           Typechecker.Memory
 import           Typechecker.Monads
 import           Typechecker.Types
 
-expectMatchingArgsM :: BNFC'Position -> Ident -> [ValueType] -> [ValueType] -> CheckerM ()
+expectMatchingArgsM :: BNFC'Position -> Ident -> [ValueType] -> [ValueType] -> EmptyCheckerM
 expectMatchingArgsM pos ident funArgTs appArgTs = do
   assertM (funArgCount == appArgCount) (ArgumentCountMismatchE pos ident funArgCount appArgCount)
   mapM_ (expectArgTypesM pos) argPairs
@@ -26,10 +26,10 @@ expectMatchingArgsM pos ident funArgTs appArgTs = do
     appArgCount = length appArgTs :: Int
     argPairs = zip funArgTs appArgTs :: [(ValueType, ValueType)]
 
-expectArgTypesM :: BNFC'Position -> (ValueType, ValueType) -> CheckerM ()
+expectArgTypesM :: BNFC'Position -> (ValueType, ValueType) -> EmptyCheckerM
 expectArgTypesM pos (t, t') = assertM (canAssign t t') $ ArgumentTypesMismatchE pos t t'
 
-expectFunctionTypeM :: BNFC'Position -> InternalType -> CheckerM ()
+expectFunctionTypeM :: BNFC'Position -> InternalType -> EmptyCheckerM
 expectFunctionTypeM pos fun@(ITFun _ _) = return ()
 expectFunctionTypeM pos t               = throwError $ NotCallableE pos t
 

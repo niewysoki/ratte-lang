@@ -20,13 +20,17 @@ expectUniqueArgumentsM args ex = do
 
 initGetIdent :: Init -> Ident
 initGetIdent (IFn _ ident _ _ _)   = ident
+initGetIdent (IConst _ ident _ _)  = ident
 initGetIdent (IVar _ ident _ _)    = ident
-initGetIdent (IVarMut _ ident _ _) = ident
+initGetIdent (IVarInf _ ident _)   = ident
+initGetIdent (IConstInf _ ident _) = ident
 
 initGetPos :: Init -> BNFC'Position
 initGetPos (IFn pos _ _ _ _)   = pos
+initGetPos (IConst pos _ _ _)  = pos
 initGetPos (IVar pos _ _ _)    = pos
-initGetPos (IVarMut pos _ _ _) = pos
+initGetPos (IVarInf pos _ _)   = pos
+initGetPos (IConstInf pos _ _) = pos
 
 getArgIdent :: Arg -> Ident
 getArgIdent (IArg _ id _)    = id

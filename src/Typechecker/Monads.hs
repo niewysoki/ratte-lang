@@ -1,7 +1,8 @@
 module Typechecker.Monads
   ( CheckerM
-  , Checker(..)
-  , Eval(..)
+  , EmptyCheckerM
+  , Checker(checkM)
+  , Eval(evalM)
   ) where
 import           Control.Monad.Except   (Except)
 import           Control.Monad.Reader   (ReaderT)
@@ -11,6 +12,7 @@ import           Typechecker.Memory
 import           Typechecker.Types
 
 type CheckerM a = StateT Memory (Except TypeCheckingException) a
+type EmptyCheckerM = CheckerM ()
 
 class Checker a where
   checkM :: Maybe InternalType -> a -> CheckerM a

@@ -5,12 +5,11 @@ module Common.BuiltIn
   ) where
 import           Control.Monad.Except (MonadError (throwError),
                                        MonadIO (liftIO))
-import           Evaluator.Exceptions (RuntimeException (UnkownE))
-import           Evaluator.Memory     (Value (ValBool, ValEmpty, ValInt, ValStr))
-import           Evaluator.Monads     (EvalM)
-import           Generated.Syntax     (Ident (..))
-import           Typechecker.Types    (InternalType (ITBool, ITFun, ITInt, ITStr, ITVoid),
-                                       Mutability (Imm), ValueType)
+import           Evaluator.Exceptions
+import           Evaluator.Memory
+import           Evaluator.Monads
+import           Generated.Syntax 
+import           Typechecker.Types
 
 printStr, showInt, showBoolean :: String
 printStr = "Println"
@@ -36,7 +35,7 @@ evalBuiltIn (Ident name) [value]
   | name == showInt     = return . ValStr $ showValue value
   | name == showBoolean = return . ValStr $ showValue value
 
-evalBuiltIn _ _ = throwError $ UnkownE Nothing
+evalBuiltIn _ _ = throwError $ UnknownE Nothing
 
 showValue :: Value -> String
 showValue (ValStr s)  = s
