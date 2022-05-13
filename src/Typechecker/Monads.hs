@@ -6,12 +6,12 @@ module Typechecker.Monads
   , Checker(..)
   , Eval(..)
   ) where
-import           Control.Monad.Except
-import           Control.Monad.Reader
-import           Control.Monad.State
-import           Typechecker.Exceptions
-import           Typechecker.Memory
-import           Typechecker.Types
+import           Control.Monad.Except   (Except)
+import           Control.Monad.Reader   (ReaderT)
+import           Control.Monad.State    (StateT)
+import           Typechecker.Exceptions (TypeCheckingException)
+import           Typechecker.Memory     (Memory)
+import           Typechecker.Types      (InternalType, ValueType)
 
 type CheckerM' a = StateT Memory (Except TypeCheckingException) a
 type CheckerM = CheckerM' ()

@@ -1,6 +1,6 @@
 module Evaluator.Exceptions (RuntimeException(..)) where
 
-import           Generated.Syntax
+import           Generated.Syntax (BNFC'Position)
 
 type Pos = BNFC'Position
 

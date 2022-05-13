@@ -1,5 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
-module Evaluator.Memory 
+module Evaluator.Memory
   ( Value(..)
   , Memory
   , emptyMemory
@@ -15,9 +15,10 @@ module Evaluator.Memory
   , getArgLoc
   ) where
 
-import           Control.Monad
+import           Control.Monad    (liftM2)
 import qualified Data.Map         as M
-import           Generated.Syntax
+import           Generated.Syntax (Arg, Arg' (IArg, IArgMut), Block, Expr,
+                                   Expr' (EVar), Ident (..))
 
 data Value
   = ValEmpty

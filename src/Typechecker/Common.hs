@@ -5,11 +5,9 @@ module Typechecker.Common
   , initGetPos
   , getArgIdent
   ) where
-import           Control.Monad.Except
-import           Data.List
+import           Control.Monad.Except (MonadError (throwError))
+import           Data.List            (nub)
 import           Generated.Syntax
-import           Typechecker.Exceptions
-import           Typechecker.Types
 
 assertM :: MonadError e m => Bool -> e -> m ()
 assertM False ex = throwError ex

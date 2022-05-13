@@ -10,10 +10,11 @@ module Typechecker.Memory
   , hasSymbolInCurrentContext
   ) where
 
-import           Common.BuiltIn
-import           Data.Map          as M
-import           Generated.Syntax
-import           Typechecker.Types
+import           Common.BuiltIn    (builtInFuncTypes)
+import           Data.Map          as M (Map, empty, fromList, insert, lookup,
+                                         member, union)
+import           Generated.Syntax  (Ident)
+import           Typechecker.Types (ValueType)
 
 type Env = M.Map Ident ValueType
 

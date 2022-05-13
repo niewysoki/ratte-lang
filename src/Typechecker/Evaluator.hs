@@ -6,15 +6,15 @@ module Typechecker.Evaluator
   , expectSimpleTypesM
   ) where
 
-import           Control.Monad.Except
-import           Control.Monad.Reader
-import           Data.Foldable
-import           Data.Maybe
-import           Generated.Syntax
-import           Typechecker.Common
+import           Control.Monad.Except   (MonadError (throwError))
+import           Control.Monad.Reader   (asks)
+import           Data.Foldable          (find)
+import           Data.Maybe             (fromMaybe)
+import           Generated.Syntax       (BNFC'Position, Ident)
+import           Typechecker.Common     (assertM)
 import           Typechecker.Exceptions
-import           Typechecker.Memory
-import           Typechecker.Monads
+import           Typechecker.Memory     (getType)
+import           Typechecker.Monads     (EvalM, EvalWithoutValueM)
 import           Typechecker.Types
 
 expectMatchingArgsM :: BNFC'Position -> Ident -> [ValueType] -> [ValueType] -> EvalWithoutValueM

@@ -5,13 +5,13 @@ module Typechecker.Checker
   , expectReturnOccuredM
   , doNestedChecking
   ) where
-import           Control.Monad.Except
-import           Control.Monad.State
-import           Generated.Syntax
-import           Typechecker.Common
+import           Control.Monad.Except   (MonadError (throwError))
+import           Control.Monad.State    (MonadState (get, put), gets, modify)
+import           Generated.Syntax       (BNFC'Position, Ident, Init, Type)
+import           Typechecker.Common     (assertM, initGetIdent, initGetPos)
 import           Typechecker.Exceptions
 import           Typechecker.Memory
-import           Typechecker.Monads
+import           Typechecker.Monads     (CheckerM, CheckerWithValueM)
 import           Typechecker.Types
 
 doNestedChecking :: CheckerM -> CheckerM

@@ -3,12 +3,14 @@ module Common.BuiltIn
   , evalBuiltIn
   , builtInFuncTypes
   ) where
-import           Control.Monad.Except
-import           Evaluator.Exceptions
-import           Evaluator.Memory
-import           Evaluator.Monads
-import           Generated.Syntax
-import           Typechecker.Types
+import           Control.Monad.Except (MonadError (throwError),
+                                       MonadIO (liftIO))
+import           Evaluator.Exceptions (RuntimeException (UnkownE))
+import           Evaluator.Memory     (Value (ValBool, ValEmpty, ValInt, ValStr))
+import           Evaluator.Monads     (EvalM)
+import           Generated.Syntax     (Ident (..))
+import           Typechecker.Types    (InternalType (ITBool, ITFun, ITInt, ITStr, ITVoid),
+                                       Mutability (Imm), ValueType)
 
 printStr, showInt, showBoolean :: String
 printStr = "Println"

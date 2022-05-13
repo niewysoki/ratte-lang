@@ -1,11 +1,11 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Evaluator.Evaluator (eval) where
-import           Common.BuiltIn
-import           Control.Monad.Except
-import           Control.Monad.State
-import           Evaluator.Exceptions
+import           Common.BuiltIn       (evalBuiltIn, isBuiltIn)
+import           Control.Monad.Except (MonadError (throwError), runExceptT)
+import           Control.Monad.State  (evalStateT, gets, modify)
+import           Evaluator.Exceptions (RuntimeException (DivideByZeroE))
 import           Evaluator.Memory
-import           Evaluator.Monads
+import           Evaluator.Monads     (Eval (..), EvalM)
 import           Generated.Syntax
 
 eval :: Program -> IO (Either RuntimeException Value)

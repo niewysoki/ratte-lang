@@ -1,8 +1,10 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Typechecker.Typechecker (typecheck) where
-import           Control.Monad.Except
-import           Control.Monad.Reader
-import           Control.Monad.State
+import           Control.Monad.Except   (MonadError (throwError), runExcept)
+import           Control.Monad.Reader   (MonadReader (ask, local),
+                                         ReaderT (runReaderT))
+import           Control.Monad.State    (MonadState (get, put),
+                                         StateT (runStateT), evalStateT, modify)
 import           Generated.Syntax
 import qualified Typechecker.Checker    as Chck
 import           Typechecker.Common     as Comm
