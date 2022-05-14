@@ -9,8 +9,9 @@ module Typechecker.Checker
   , expectMatchingArgsM
   , expectFunctionTypeM
   , expectAndGetDefinedSymbolM
-  , expectSimpleTypesM
+  , expectAndGetSimpleTypeM
   , expectUniqueArgumentsM
+  , expectSimpleExprsM
   ) where
 import           Control.Monad.Except   (MonadError (throwError))
 import           Control.Monad.State    (MonadState (get, put), gets, modify)
@@ -79,11 +80,17 @@ expectAndGetDefinedSymbolM pos ident = do
     Just t  -> return t
     Nothing -> throwError $ UndefinedSymbolE pos ident
 
-expectSimpleTypesM :: BNFC'Position -> InternalType -> InternalType -> [ValueType] -> CheckerM ValueType
-expectSimpleTypesM pos expT retT types = do
-  let t = fromMaybe expT . find (/= expT) $ map fst types
-  assertM (expT == t) (InvalidTypeE pos expT t)
+expectAndGetSimpleTypeM :: BNFC'Position -> InternalType -> InternalType -> CheckerM ValueType
+expectAndGetSimpleTypeM pos expT retT = do
+  assertM (expT == retT) (InvalidTypeE pos expT retT)
   return (retT, Imm)
 
 expectUniqueArgumentsM :: MonadError e m => [Arg] -> e -> m ()
 expectUniqueArgumentsM args = assertM (validateFunArgs args)
+
+expectSimpleExprsM :: BNFC'Position -> [InternalType] -> [InternalType] -> EmptyCheckerM
+expectSimpleExprsM pos expTs allowedTs = do
+  let t = head expTs
+  let wrongTs = filter (/= t) expTs
+  assertM (null wrongTs) $ OpTypesUnequalE pos t (head wrongTs)
+  assertM (t `elem` allowedTs) $ InvalidTypeE pos t (head allowedTs)

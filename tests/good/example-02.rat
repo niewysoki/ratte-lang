@@ -1,0 +1,15 @@
+fn Main () -> Void {
+  let a = 151;
+  let x = 152;
+  let b = "napis";
+  let mut c = False;
+  c = a < x  or
+      a <= x and
+      a > x  or
+      a >= x and
+      a == x;
+  c = b == "inny napis";
+  c = not c;
+  c = c or c;
+  return;
+}

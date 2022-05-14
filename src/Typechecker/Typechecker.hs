@@ -5,6 +5,7 @@ module Typechecker.Typechecker (typecheck) where
 import           Control.Monad.Except   (MonadError (throwError), runExcept)
 import           Control.Monad.State    (MonadState (get, put),
                                          StateT (runStateT), evalStateT, modify)
+import           Data.List
 import           Generated.Syntax
 import           Typechecker.Checker
 import           Typechecker.Exceptions
@@ -76,9 +77,6 @@ instance Checker Stmt where
     expectAssignmentM pos ident ITInt
     return s
 
-  checkM Nothing (SRet pos _) = throwError $ ReturnOutOfScopeE pos
-  checkM Nothing (SVRet pos) = throwError $ ReturnOutOfScopeE pos
-
   checkM retT (SCond pos cond block) = do
     (t, _) <- evalM cond
     assertM (t == ITBool) $ TypeMismatchE pos t ITBool
@@ -108,6 +106,9 @@ instance Checker Stmt where
     expectAssignmentM pos ident t
     return s
 
+  checkM Nothing (SRet pos _) = throwError $ ReturnOutOfScopeE pos
+  checkM Nothing (SVRet pos)  = throwError $ ReturnOutOfScopeE pos
+
   checkM (Just retT) s@(SRet pos exp) = do
     (expT, _) <- evalM  exp
     assertM (canAssign retT expT) (ReturnTypeMismatchE pos retT expT)
@@ -120,18 +121,20 @@ instance Checker Stmt where
     return s
 
 instance Eval Expr where
-  evalM (ELitInt _ _) = return (ITInt, Imm)
-  evalM (ELitFalse _) = return (ITBool, Imm)
-  evalM (ELitTrue _) = return (ITBool, Imm)
-  evalM (EString _ _) = return (ITStr, Imm)
-  evalM (ENeg pos exp) = mapM evalM [exp] >>= expectSimpleTypesM pos ITInt ITInt
-  evalM (ENot pos exp) = mapM evalM [exp] >>= expectSimpleTypesM pos ITBool ITBool
-  evalM (EMul pos exp1 _ exp2) = mapM evalM [exp1, exp2] >>= expectSimpleTypesM pos ITInt ITInt
-  evalM (EAdd pos exp1 _ exp2) = mapM evalM [exp1, exp2] >>= expectSimpleTypesM pos ITInt ITInt
-  evalM (ERel pos exp1 _ exp2) = mapM evalM [exp1, exp2] >>= expectSimpleTypesM pos ITInt ITBool
-  evalM (EAnd pos exp1 exp2) = mapM evalM [exp1, exp2] >>= expectSimpleTypesM pos ITBool ITBool
-  evalM (EOr pos exp1 exp2) = mapM evalM [exp1, exp2] >>= expectSimpleTypesM pos ITBool ITBool
-  evalM (EVar pos ident) = expectAndGetDefinedSymbolM pos ident
+  evalM (ELitInt _ _)                 = return (ITInt, Imm)
+  evalM (ELitFalse _)                 = return (ITBool, Imm)
+  evalM (ELitTrue _)                  = return (ITBool, Imm)
+  evalM (EString _ _)                 = return (ITStr, Imm)
+  evalM (ENeg pos exp)                = evalSimpleExprs pos [exp] [ITInt] ITInt
+  evalM (ENot pos exp)                = evalSimpleExprs pos [exp] [ITBool] ITBool
+  evalM (EAdd pos exp1 _ exp2)        = evalSimpleExprs pos [exp1, exp2] [ITInt] ITInt
+  evalM (EMul pos exp1 _ exp2)        = evalSimpleExprs pos [exp1, exp2] [ITInt] ITInt
+  evalM (EAnd pos exp1 exp2)          = evalSimpleExprs pos [exp1, exp2] [ITBool] ITBool
+  evalM (EOr pos exp1 exp2)           = evalSimpleExprs pos [exp1, exp2] [ITBool] ITBool
+  evalM (ERel pos exp1 (OEQU _) exp2) = evalSimpleExprs pos [exp1, exp2] [ITStr, ITBool, ITInt] ITBool
+  evalM (ERel pos exp1 (ONE _) exp2)  = evalSimpleExprs pos [exp1, exp2] [ITStr, ITBool, ITInt] ITBool
+  evalM (ERel pos exp1 _ exp2)        = evalSimpleExprs pos [exp1, exp2] [ITInt] ITBool
+  evalM (EVar pos ident)              = expectAndGetDefinedSymbolM pos ident
 
   evalM (EApp pos ident args) = do
     (t, _) <- expectAndGetDefinedSymbolM pos ident
@@ -155,3 +158,10 @@ checkFunctionBodyM pos retT args block = doNestedChecking $ do
     block' <- checkM (Just retT) block
     expectReturnOccuredM pos
     return block')
+
+evalSimpleExprs :: BNFC'Position -> [Expr] -> [InternalType] -> InternalType -> CheckerM ValueType
+evalSimpleExprs pos exps allowedTs retT = do
+  ts <- mapM evalM exps
+  let expTs = map fst ts
+  expectSimpleExprsM pos expTs allowedTs
+  return (retT, Imm)

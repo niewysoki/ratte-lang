@@ -1,0 +1,50 @@
+fn Fail () -> Void {
+  let a = 1 / 0;
+  return;
+}
+
+let mut count = 0;
+
+fn TestIf () -> Void {
+  let a = 1;
+  if (a > 0) {
+    count++;
+    return;
+  }
+
+  return Fail();
+}
+
+fn TestIfElse () -> Void {
+  let a = 1;
+  if (a < 0) {
+    return Fail();
+  } else {
+    count++;
+  }
+
+  return;
+}
+
+fn TestWhile () -> Void {
+  let mut a = 5;
+  while (a > 0) {
+    a--;
+    let a = 1;
+    count = count + a;
+  }
+
+  if (a != 0) {
+    return Fail();
+  }
+
+  return;
+}
+
+fn Main () -> Void {
+  TestIf();
+  TestIfElse();
+  TestWhile();
+  Println(ShowInt(count));
+  return;
+}

@@ -1,0 +1,6 @@
+fn Main () -> Void {
+  Println("napis");
+  Println(ShowInt(5));
+  Println(ShowBoolean(True));
+  return;
+}

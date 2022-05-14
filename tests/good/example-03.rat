@@ -1,0 +1,7 @@
+fn Main () -> Void {
+  let a = 5;
+  let mut b = a;
+  b = b + 2;
+  b = a;
+  return;
+}
