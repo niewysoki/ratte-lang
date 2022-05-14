@@ -30,7 +30,7 @@ expectInitTypeM pos id t expT mut = do
   let varT = convertType t
   assertM (expT /= ITVoid) (VoidAssignmentE pos)
   assertM (canAssign varT expT) (TypeMismatchE pos varT expT)
-  modify $ addType id (expT, mut)
+  modify $ addType id (varT, mut)
 
 expectInitAnyTypeM :: BNFC'Position -> Ident -> InternalType -> Mutability -> EmptyCheckerM
 expectInitAnyTypeM pos id expT mut = do

@@ -19,6 +19,10 @@ fn IncMut (mut x: Int) -> Int {
   return x;
 }
 
+fn ClojureMut (mut x : Int) -> fn (mut Int) -> Int {
+  return Clojure(x);
+}
+
 fn Main() -> Void {
   let mut x = 0;
   Println(ShowInt(Apply(Inc, x)));
@@ -34,13 +38,8 @@ fn Main() -> Void {
   let c2: fn (mut Int) -> fn (Int) -> Int = Clojure;
   let c3: fn (Int) -> fn (mut Int) -> Int = Clojure;
   let c4: fn (Int) -> fn (Int) -> Int = Clojure;
-
-  fn ClojureMut (mut x : Int) -> fn (mut Int) -> Int {
-    return Clojure(x);
-  };
-
+  
   // reference args cannot be promoted to value args
-  let cMut: fn (mut Int) -> fn (mut Int) -> Int = Clojure;
-
+  let c5: fn (mut Int) -> fn (mut Int) -> Int = ClojureMut;
   return;
 }
