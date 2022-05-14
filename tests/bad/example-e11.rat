@@ -1,0 +1,7 @@
+fn A (x: Int, x: Int) -> Void {
+  return;
+}
+
+fn Main () -> Void {
+  return;
+}

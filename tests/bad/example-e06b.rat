@@ -1,0 +1,12 @@
+fn Clojure (init: Int) -> fn (mut Int) -> Int {
+  let mut x = init;
+  return | y: Int | -> Int {
+    x = x + y;
+    return x;
+  };
+}
+
+fn Main () -> Void {
+  let c: fn (Int) -> Int = Clojure(0);
+  return;
+}

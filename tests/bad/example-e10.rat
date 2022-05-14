@@ -1,0 +1,3 @@
+fn Main () -> Void {
+  let a: Int = 10;
+}

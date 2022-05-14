@@ -1,0 +1,5 @@
+fn Main () -> Void {
+  let a: Int = 5;
+  a++;
+  return;
+}

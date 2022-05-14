@@ -1,0 +1,8 @@
+fn Fail () -> Void {
+  let a = 1 / 0;
+  return;
+}
+
+fn Main () -> Void {
+  return Fail();
+}

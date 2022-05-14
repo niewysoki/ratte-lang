@@ -32,7 +32,7 @@ instance Show InternalType where
   show _ = ""
 
 showV :: ValueType -> String
-showV (t, Mut) = "mut " ++ show t
+showV (t, Mut) = "<mut " ++ show t ++ ">"
 showV (t, _) = show t
 
 class Typing a where

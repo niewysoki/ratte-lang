@@ -1,0 +1,8 @@
+fn Fun () -> Void {
+  return;
+}
+
+fn Main () -> Void {
+  Fun(0);
+  return;
+}

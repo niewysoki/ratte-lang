@@ -1,0 +1,4 @@
+fn Main () -> Void {
+  let a = True < 5;
+  return;
+}

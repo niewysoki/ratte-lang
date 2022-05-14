@@ -1,0 +1,8 @@
+fn Main () -> Void {
+  return;
+}
+
+fn Main () -> Void {
+  Println("bad");
+  return;
+}

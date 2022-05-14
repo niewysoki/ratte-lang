@@ -1,0 +1,4 @@
+fn Main () -> Void {
+  let a: Int = True;
+  return;
+}

@@ -1,0 +1,5 @@
+fn Main () -> Void {
+  let a = True;
+  let a = "napis";
+  return;
+}

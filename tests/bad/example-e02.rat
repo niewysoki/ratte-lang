@@ -1,0 +1,4 @@
+fn Main () -> Void {
+  let mut a = x;
+  return;
+}

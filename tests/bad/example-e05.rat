@@ -1,0 +1,8 @@
+fn Fun (mut x: Int) -> Void {
+  return;
+}
+
+fn Main () -> Void {
+  Fun("napis");
+  return;
+}

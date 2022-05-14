@@ -6,8 +6,7 @@ import           Typechecker.Types
 type Pos = BNFC'Position
 
 data TypeCheckingException
-  = InvalidTypeE Pos InternalType InternalType
-  | UndefinedSymbolE Pos Ident
+  = UndefinedSymbolE Pos Ident
   | NotCallableE Pos InternalType
   | ArgumentCountMismatchE Pos Ident Int Int
   | ArgumentTypesMismatchE Pos ValueType ValueType
@@ -25,10 +24,9 @@ showE :: [String] -> String
 showE msgs = unwords ("ERROR:" : msgs)
 
 expectation :: String -> String -> String -> BNFC'Position -> [String]
-expectation msg s s' pos = [msg, s, ", but got", s', "instead, at", showP pos]
+expectation msg s s' pos = [msg, s, "but got", s', "instead, at", showP pos]
 
 instance Show TypeCheckingException where
-  show (InvalidTypeE pos t t')              = showE $ expectation "invalid type. Expected type" (show t) (show t') pos
   show (UndefinedSymbolE pos id)            = showE ["undefined symbol", showI id, "at", showP pos]
   show (NotCallableE pos t)                 = showE $ expectation "not callable. Expected" "function type" (show t) pos
   show (ArgumentCountMismatchE pos id c c') = showE $ expectation ("argument count mismatch in invocation of " ++ showI id ++ ". Expected number of arguments") (show c) (show c') pos

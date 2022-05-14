@@ -1,6 +1,4 @@
-{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
 module Typechecker.Typechecker (typecheck) where
 import           Control.Monad.Except   (MonadError (throwError), runExcept)
 import           Control.Monad.State    (MonadState (get, put),
@@ -19,7 +17,7 @@ typecheck p = runExcept $ evalStateT (checkM Nothing p) emptyMemory
 
 instance Checker Program where
   checkM _ (PProgram pos inits) = do
-    mapM_ expectUniqueInitM inits
+    expectUniqueInitsM inits
     inits' <- mapM (checkM Nothing) inits
     checkM Nothing $ SExp pos $ EApp pos (Ident "Main") []
     return $ PProgram pos inits'

@@ -5,6 +5,7 @@ module Typechecker.Utils
   , initGetPos
   , getArgIdent
   , validateFunArgs
+  , initsEq
   ) where
 import           Control.Monad.Except (MonadError (throwError))
 import           Control.Monad.State  (MonadState (..), modify)
@@ -45,3 +46,6 @@ getArgIdent (IArgMut _ id _) = id
 
 validateFunArgs :: [Arg] -> Bool
 validateFunArgs args = (==) <$> nub <*> id $ map getArgIdent args
+
+initsEq :: Init -> Init -> Bool
+initsEq i1 i2 = initGetIdent i1 == initGetIdent i2

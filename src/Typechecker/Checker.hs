@@ -2,14 +2,13 @@ module Typechecker.Checker
   ( expectAssignmentM
   , expectInitTypeM
   , expectInitAnyTypeM
-  , expectUniqueInitM
+  , expectUniqueInitsM
   , expectReturnOccuredM
   , doNestedChecking
   , expectUniqueOrShadowM
   , expectMatchingArgsM
   , expectFunctionTypeM
   , expectAndGetDefinedSymbolM
-  , expectAndGetSimpleTypeM
   , expectUniqueArgumentsM
   , expectSimpleExprsM
   ) where
@@ -23,6 +22,7 @@ import           Typechecker.Exceptions
 import           Typechecker.Memory
 import           Typechecker.Monads
 import           Typechecker.Types
+import Data.List
 
 expectInitTypeM :: BNFC'Position -> Ident -> Type -> InternalType -> Mutability -> EmptyCheckerM
 expectInitTypeM pos id t expT mut = do
@@ -44,8 +44,10 @@ expectAssignmentM pos ident expT = do
   assertM (canAssign t expT) (TypeMismatchE pos t expT)
   assertM (mut == Mut) (ConstViolationE pos ident t)
 
-expectUniqueInitM :: Init -> EmptyCheckerM
-expectUniqueInitM init = expectUniqueOrShadowM (initGetPos init) (initGetIdent init)
+expectUniqueInitsM :: [Init] -> EmptyCheckerM
+expectUniqueInitsM inits = do
+  let duplicates = concat . filter ((> 1) . length) . groupBy initsEq $ inits
+  assertM (null duplicates) $ RedeclarationE <$> initGetPos <*> initGetIdent $ head duplicates
 
 expectReturnOccuredM :: BNFC'Position -> EmptyCheckerM
 expectReturnOccuredM pos = do
@@ -78,11 +80,6 @@ expectAndGetDefinedSymbolM pos ident = do
     Just t  -> return t
     Nothing -> throwError $ UndefinedSymbolE pos ident
 
-expectAndGetSimpleTypeM :: BNFC'Position -> InternalType -> InternalType -> CheckerM ValueType
-expectAndGetSimpleTypeM pos expT retT = do
-  assertM (expT == retT) (InvalidTypeE pos expT retT)
-  return (retT, Imm)
-
 expectUniqueArgumentsM :: MonadError e m => [Arg] -> e -> m ()
 expectUniqueArgumentsM args = assertM (validateFunArgs args)
 
@@ -91,4 +88,4 @@ expectSimpleExprsM pos expTs allowedTs = do
   let t = head expTs
   let wrongTs = filter (/= t) expTs
   assertM (null wrongTs) $ OpTypesUnequalE pos t (head wrongTs)
-  assertM (t `elem` allowedTs) $ InvalidTypeE pos t (head allowedTs)
+  assertM (t `elem` allowedTs) $ TypeMismatchE pos t (head allowedTs)
