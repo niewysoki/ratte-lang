@@ -46,8 +46,7 @@ library ratte
     base >=4.10 && <5,
     containers,
     mtl,
-    array,
-    lens
+    array
   default-language: Haskell2010
 
 
