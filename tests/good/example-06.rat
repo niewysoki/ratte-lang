@@ -1,0 +1,34 @@
+fn IsEven (n: Int) -> Boolean {
+  return n % 2 == 0;
+}
+
+fn FastFib (n: Int) -> Int {
+  if (n == 0) {
+    return 0;
+  }
+
+  if (n == 1) {
+    return 1;
+  }
+
+  if (n == 2) {
+    return 1;
+  }
+
+  let k = n / 2;
+  let fib = FastFib(k);
+  let fibn = FastFib(k + 1);
+  let mut ret = 0;
+  if (IsEven(n)) {
+    ret = fib * (2 * fibn - fib);
+  } else {
+    ret = fib * fib + fibn * fibn;
+  }
+
+  return ret;
+}
+
+fn Main () -> Void {
+  Println(ShowInt(FastFib(1000)));
+  return;
+}

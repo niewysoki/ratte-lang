@@ -1,0 +1,20 @@
+fn ByValue(n: Int) -> Int {
+  return n + 1;
+}
+
+fn ByRef(mut n: Int) -> Void {
+  n++;
+  return;
+}
+
+fn Main() -> Void {
+  let mut a = 0;
+  Println(ShowInt(a));
+  ByRef(a);
+  Println(ShowInt(a));
+  let b = ByValue(a);
+  Println(ShowInt(a));
+  a = ByValue(a);
+  Println(ShowInt(a));
+  return;
+}

@@ -1,0 +1,18 @@
+fn Main () -> Void {
+  let mut a = 5;
+
+  fn Nested () -> Void {
+    a--;
+    Println(ShowInt(a));
+    return;
+  }
+
+  while (a > 0) {
+    let a = "error";
+    Nested();
+  }
+
+  return;
+}
+
+let Main = 5;

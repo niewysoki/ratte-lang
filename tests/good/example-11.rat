@@ -1,0 +1,8 @@
+fn Fun () -> Int {
+  return 10;
+}
+
+fn Main () -> Void {
+  Println(ShowInt(Fun()));
+  return;
+}
