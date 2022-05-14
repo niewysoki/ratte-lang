@@ -14,5 +14,3 @@ fn Main () -> Void {
 
   return;
 }
-
-let Main = 5;

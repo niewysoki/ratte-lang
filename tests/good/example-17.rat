@@ -1,7 +1,46 @@
-fn A() -> Void {
-  return;
+fn Apply (f: fn (mut Int) -> Int, mut x: Int) -> Int {
+  return f(x);
+}
+
+fn Clojure (init: Int) -> fn (Int) -> Int {
+  let mut x = init;
+  return | y: Int | -> Int {
+    x = x + y;
+    return x;
+  };
+}
+
+fn Inc (x: Int) -> Int {
+  return x + 1;
+}
+
+fn IncMut (mut x: Int) -> Int {
+  x++;
+  return x;
 }
 
 fn Main() -> Void {
-  return A();
+  let mut x = 0;
+  Println(ShowInt(Apply(Inc, x)));
+  Println(ShowInt(Apply(IncMut, x)));
+  Println(ShowInt(Apply(Inc, x)));
+  let counter = Clojure(10);
+  Println(ShowInt(counter(1)));
+  Println(ShowInt(counter(3)));
+  Println(ShowInt(counter(5)));
+
+  // value args can be promoted to reference args
+  let c1: fn (mut Int) -> fn (mut Int) -> Int = Clojure;
+  let c2: fn (mut Int) -> fn (Int) -> Int = Clojure;
+  let c3: fn (Int) -> fn (mut Int) -> Int = Clojure;
+  let c4: fn (Int) -> fn (Int) -> Int = Clojure;
+
+  fn ClojureMut (mut x : Int) -> fn (mut Int) -> Int {
+    return Clojure(x);
+  };
+
+  // reference args cannot be promoted to value args
+  let cMut: fn (mut Int) -> fn (mut Int) -> Int = Clojure;
+
+  return;
 }

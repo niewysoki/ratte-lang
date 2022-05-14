@@ -73,5 +73,5 @@ instance CheckAssign Mutability where
   canAssign _ _     = True
 
 instance CheckAssign InternalType where
-  canAssign (ITFun argTs retT) (ITFun argTs' retT') = canAssign retT' retT && all (== True) (zipWith canAssign argTs' argTs)
+  canAssign (ITFun argTs retT) (ITFun argTs' retT') = canAssign retT retT' && all (== True) (zipWith canAssign argTs' argTs)
   canAssign t t' = t == t'
