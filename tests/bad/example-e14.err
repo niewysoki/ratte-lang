@@ -1,0 +1,1 @@
+"ERROR: binary operation type mismatch. Left side is of type <Boolean> while right side is of type <Int> , at line 2, column 11"

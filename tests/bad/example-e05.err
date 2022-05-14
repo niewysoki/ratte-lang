@@ -1,0 +1,1 @@
+"ERROR: function arguments type mismatch. Expected type <mut <Int>> but got <String> instead, at line 6, column 3"
