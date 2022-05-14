@@ -19,7 +19,6 @@ maintainer:         franciszek.hnatow@gmail.com
 -- A copyright notice.
 -- copyright:
 -- category:
-extra-source-files: CHANGELOG.md
 
 library ratte
   exposed-modules:
