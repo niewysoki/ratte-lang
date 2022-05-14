@@ -59,12 +59,10 @@ expectUniqueOrShadowM pos ident = do
 
 expectMatchingArgsM :: BNFC'Position -> Ident -> [ValueType] -> [ValueType] -> EmptyCheckerM
 expectMatchingArgsM pos ident funArgTs appArgTs = do
+  let funArgCount = length funArgTs
+  let appArgCount = length appArgTs
   assertM (funArgCount == appArgCount) (ArgumentCountMismatchE pos ident funArgCount appArgCount)
-  mapM_ (expectArgTypesM pos) argPairs
-  where
-    funArgCount = length funArgTs :: Int
-    appArgCount = length appArgTs :: Int
-    argPairs = zip funArgTs appArgTs :: [(ValueType, ValueType)]
+  mapM_ (expectArgTypesM pos) $ zip funArgTs appArgTs
 
 expectArgTypesM :: BNFC'Position -> (ValueType, ValueType) -> EmptyCheckerM
 expectArgTypesM pos (t, t') = assertM (canAssign t t') $ ArgumentTypesMismatchE pos t t'
