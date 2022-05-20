@@ -1,6 +1,7 @@
 module Typechecker.Utils
   ( assertM
   , doNestedChecking
+  , doNestedCheckingWithReturn
   , initGetIdent
   , initGetPos
   , getArgIdent
@@ -8,19 +9,23 @@ module Typechecker.Utils
   , initsEq
   ) where
 import           Control.Monad.Except (MonadError (throwError))
-import           Control.Monad.State  (MonadState (..), modify)
+import           Control.Monad.State  (MonadState (..), modify, gets)
 import           Data.List            (nub)
 import           Generated.Syntax
 import           Typechecker.Memory
 import           Typechecker.Monads
 
 doNestedChecking :: CheckerM a -> CheckerM a
-doNestedChecking checking = do
+doNestedChecking = (fst <$>) . doNestedCheckingWithReturn
+
+doNestedCheckingWithReturn :: CheckerM a -> CheckerM (a, Bool)
+doNestedCheckingWithReturn checking = do
   mem <- get
   modify setOuterEnv
-  ret <- checking
+  res <- checking
+  ret <- gets hasReturn
   put mem
-  return ret
+  return (res, ret)
 
 assertM :: MonadError e m => Bool -> e -> m ()
 assertM False ex = throwError ex

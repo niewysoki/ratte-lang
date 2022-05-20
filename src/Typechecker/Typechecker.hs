@@ -2,7 +2,7 @@
 module Typechecker.Typechecker (typecheck) where
 import           Control.Monad.Except   (MonadError (throwError), runExcept)
 import           Control.Monad.State    (MonadState (get, put),
-                                         StateT (runStateT), evalStateT, modify)
+                                         StateT (runStateT), evalStateT, modify, gets, when)
 import           Data.List
 import           Generated.Syntax
 import           Typechecker.Checker
@@ -84,8 +84,9 @@ instance Checker Stmt where
   checkM retT (SCondElse pos cond blockT blockF) = do
     (t, _) <- evalM cond
     assertM (t == ITBool) $ TypeMismatchE pos t ITBool
-    blockT' <- doNestedChecking $ checkM retT blockT
-    blockF' <- doNestedChecking $ checkM retT blockF
+    (blockT', hasReturnT) <- doNestedCheckingWithReturn $ checkM retT blockT
+    (blockF', hasReturnF) <- doNestedCheckingWithReturn $ checkM retT blockF
+    when (hasReturnT && hasReturnF) $ modify setReturn
     return $ SCondElse pos cond blockT' blockF'
 
   checkM retT (SWhile pos cond block) = do

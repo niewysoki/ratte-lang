@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Evaluator.Evaluator (eval) where
 import           Common.BuiltIn       (evalBuiltIn, isBuiltIn)
-import           Control.Monad.Except (MonadError (throwError), runExceptT)
+import           Control.Monad.Except (MonadError (throwError), runExceptT, when)
 import           Control.Monad.State  (evalStateT, gets, modify)
 import           Data.List
 import           Data.Map
@@ -113,8 +113,10 @@ instance Eval Expr where
   evalM (EVar _ name)                 = gets (getValue name)
   evalM (ELambda _ args _ block)      = gets (ValFunction args block . getEnv)
   evalM (EMul p exp1 (ODiv _) exp2)   = do
+    (ValInt x1) <- evalM exp1
     (ValInt x2) <- evalM exp2
-    if x2 == 0 then throwError $ DivideByZeroE p else evalIntToIntOp quot exp1 exp2
+    when (x2 == 0) $ throwError $ DivideByZeroE p
+    return . ValInt $ div x1 x2
 
   evalM (EApp _ ident argExps) = guardBuiltIn argExps ident . protectEnv $ do
     argVals <- mapM evalM argExps
