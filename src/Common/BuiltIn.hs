@@ -3,25 +3,27 @@ module Common.BuiltIn
   , evalBuiltIn
   , builtInFuncTypes
   ) where
+import           Common.Utils
 import           Control.Monad.Except (MonadError (throwError),
                                        MonadIO (liftIO))
 import           Evaluator.Exceptions
 import           Evaluator.Memory
 import           Evaluator.Monads
-import           Generated.Syntax 
+import           Generated.Syntax
 import           Typechecker.Types
-import           Common.Utils
 
-printStr, showInt, showBoolean :: String
+printStr, showInt, showBoolean, concatFun :: String
 printStr = "Println"
 showInt = "ShowInt"
 showBoolean = "ShowBoolean"
+concatFun = "Concat"
 
 builtInFuncTypes :: [(Ident, ValueType)]
 builtInFuncTypes = [
   (Ident printStr, (ITFun [(ITStr, Imm)] ITVoid, Imm)),
   (Ident showInt, (ITFun [(ITInt, Imm)] ITStr, Imm)),
-  (Ident showBoolean, (ITFun [(ITBool, Imm)] ITStr, Imm))
+  (Ident showBoolean, (ITFun [(ITBool, Imm)] ITStr, Imm)),
+  (Ident concatFun, (ITFun [(ITStr, Imm), (ITStr, Imm)] ITStr, Imm))
   ]
 
 builtInFuncNames :: [String]
@@ -35,6 +37,9 @@ evalBuiltIn (Ident name) [value]
   | name == printStr    = liftIO $ putStrLn (showValue value) >> return ValEmpty
   | name == showInt     = return . ValStr $ showValue value
   | name == showBoolean = return . ValStr $ showValue value
+
+evalBuiltIn (Ident name) vals
+  | name == concatFun   = return . ValStr $ concatMap showValue vals
 
 evalBuiltIn _ _ = throwError $ UnknownE Nothing
 

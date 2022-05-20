@@ -19,8 +19,7 @@ module Evaluator.Memory
 
 import           Control.Monad    (liftM2)
 import qualified Data.Map         as M
-import           Generated.Syntax (Arg, Arg' (IArg, IArgMut), Block, Expr,
-                                   Expr' (EVar), Ident (..))
+import           Generated.Syntax
 
 data Value
   = ValEmpty
