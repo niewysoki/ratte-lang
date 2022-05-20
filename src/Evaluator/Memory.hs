@@ -1,20 +1,20 @@
 {-# LANGUAGE RecordWildCards #-}
 module Evaluator.Memory
-  -- ( Value(..)
-  -- , Memory
-  -- , emptyMemory
-  -- , retId
-  -- , entrypointId
-  -- , getValue
-  -- , putValue
-  -- , hasValue
-  -- , updateValue
-  -- , putEnv
-  -- , getEnv
-  -- , putArgVal
-  -- , putArgValsLocs
-  -- , getArgLoc
-  -- ) 
+  ( Value(..)
+  , Memory
+  , emptyMemory
+  , retId
+  , entrypointId
+  , getValue
+  , putValue
+  , hasValue
+  , updateValue
+  , putEnv
+  , getEnv
+  , putArgVal
+  , putArgValsLocs
+  , getArgLoc
+  )
   where
 
 import           Control.Monad    (liftM2)

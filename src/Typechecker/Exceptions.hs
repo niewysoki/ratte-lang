@@ -19,6 +19,7 @@ data TypeCheckingException
   | RedeclarationE Pos Ident
   | VoidAssignmentE Pos
   | OpTypesUnequalE Pos InternalType InternalType
+  | VoidTypeIllegalE Pos
 
 showE :: [String] -> String
 showE msgs = unwords ("ERROR:" : msgs)
@@ -40,3 +41,4 @@ instance Show TypeCheckingException where
   show (RedeclarationE pos id)              = showE ["redeclaration. Name", showI id, "already in use in this context, at", showP pos]
   show (VoidAssignmentE pos)                = showE ["assignment of value of type", show ITVoid, "at", showP pos]
   show (OpTypesUnequalE pos t t')           = showE ["binary operation type mismatch.", "Left side is of type", show t, "while right side is of type", show t', ", at", showP pos]
+  show (VoidTypeIllegalE pos)               = showE ["function argument type cannot be of type", show ITVoid, "at", showP pos]

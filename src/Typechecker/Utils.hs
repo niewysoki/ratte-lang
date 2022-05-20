@@ -5,11 +5,12 @@ module Typechecker.Utils
   , initGetIdent
   , initGetPos
   , getArgIdent
-  , validateFunArgs
+  , validateFunArgsNames
+  , validateFunArgsTypes
   , initsEq
   ) where
 import           Control.Monad.Except (MonadError (throwError))
-import           Control.Monad.State  (MonadState (..), modify, gets)
+import           Control.Monad.State  (MonadState (..), gets, modify)
 import           Data.List            (nub)
 import           Generated.Syntax
 import           Typechecker.Memory
@@ -49,8 +50,27 @@ getArgIdent :: Arg -> Ident
 getArgIdent (IArg _ id _)    = id
 getArgIdent (IArgMut _ id _) = id
 
-validateFunArgs :: [Arg] -> Bool
-validateFunArgs args = (==) <$> nub <*> id $ map getArgIdent args
+getArgType :: Arg -> Type
+getArgType (IArg _ _ t)    = t
+getArgType (IArgMut _ _ t) = t
+
+getFunArgType :: ArgType -> Type
+getFunArgType (ATArg _ t)    = t
+getFunArgType (ATArgMut _ t) = t
+
+validateFunArgsNames :: [Arg] -> Bool
+validateFunArgsNames args = (==) <$> nub <*> id $ map getArgIdent args
+
+validateFunArgsTypes :: [Arg] -> Bool
+validateFunArgsTypes = all (nonVoidFunArg . getArgType)
+
+nonVoidFunArg :: Type -> Bool
+nonVoidFunArg (TFun _ args _) = nonVoidFunArgs args
+nonVoidFunArg TVoid {}        = False
+nonVoidFunArg _               = True
+
+nonVoidFunArgs :: [ArgType] -> Bool
+nonVoidFunArgs = all (nonVoidFunArg . getFunArgType)
 
 initsEq :: Init -> Init -> Bool
 initsEq i1 i2 = initGetIdent i1 == initGetIdent i2

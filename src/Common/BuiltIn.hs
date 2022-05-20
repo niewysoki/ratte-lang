@@ -30,7 +30,7 @@ builtInFuncNames = map (showI . fst) builtInFuncTypes
 isBuiltIn :: Ident -> Bool
 isBuiltIn (Ident name) = name `elem` builtInFuncNames
 
-evalBuiltIn :: Ident -> [Value] -> EvalM
+evalBuiltIn :: Ident -> [Value] -> EvalValueM
 evalBuiltIn (Ident name) [value]
   | name == printStr    = liftIO $ putStrLn (showValue value) >> return ValEmpty
   | name == showInt     = return . ValStr $ showValue value

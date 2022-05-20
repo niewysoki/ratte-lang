@@ -25,6 +25,7 @@ instance Checker Program where
 instance Checker Init where
   checkM _ (IFn pos id args ret block) = do
     expectUniqueArgumentsM args $ ArgumentRedeclarationE pos
+    expectNoVoidArgumentsM args $ VoidTypeIllegalE pos
     let funT@(ITFun argTs retT) = convertType (args, ret)
     let argIds = map getArgIdent args
     modify $ addType id (funT, Imm)
@@ -145,6 +146,7 @@ instance Eval Expr where
 
   evalM (ELambda pos args ret block) = do
     expectUniqueArgumentsM args $ ArgumentRedeclarationE pos
+    expectNoVoidArgumentsM args $ VoidTypeIllegalE pos
     let funT@(ITFun argTs retT) = convertType (args, ret)
     let argIds = map getArgIdent args
     checkFunctionBodyM pos retT (zip argIds argTs) block
@@ -153,10 +155,9 @@ instance Eval Expr where
 checkFunctionBodyM :: Checker a => BNFC'Position -> InternalType -> [(Ident, ValueType)] -> a -> CheckerM a
 checkFunctionBodyM pos retT args block = doNestedChecking $ do
   modify $ addTypes args
-  doNestedChecking (do
-    block' <- checkM (Just retT) block
-    expectReturnOccuredM pos
-    return block')
+  (block', ret) <- doNestedCheckingWithReturn $ checkM (Just retT) block
+  assertM ret $ NoReturnStatementE pos
+  return block'
 
 evalSimpleExprs :: BNFC'Position -> [Expr] -> [InternalType] -> InternalType -> CheckerM ValueType
 evalSimpleExprs pos exps allowedTs retT = do

@@ -10,19 +10,20 @@ module Typechecker.Checker
   , expectFunctionTypeM
   , expectAndGetDefinedSymbolM
   , expectUniqueArgumentsM
+  , expectNoVoidArgumentsM
   , expectSimpleExprsM
   ) where
 import           Control.Monad.Except   (MonadError (throwError))
 import           Control.Monad.State    (MonadState (get, put), gets, modify)
 import           Data.Foldable          (find)
+import           Data.List
 import           Data.Maybe             (fromMaybe)
 import           Generated.Syntax
-import           Typechecker.Utils
 import           Typechecker.Exceptions
 import           Typechecker.Memory
 import           Typechecker.Monads
 import           Typechecker.Types
-import Data.List
+import           Typechecker.Utils
 
 expectInitTypeM :: BNFC'Position -> Ident -> Type -> InternalType -> Mutability -> EmptyCheckerM
 expectInitTypeM pos id t expT mut = do
@@ -81,7 +82,10 @@ expectAndGetDefinedSymbolM pos ident = do
     Nothing -> throwError $ UndefinedSymbolE pos ident
 
 expectUniqueArgumentsM :: MonadError e m => [Arg] -> e -> m ()
-expectUniqueArgumentsM args = assertM (validateFunArgs args)
+expectUniqueArgumentsM = assertM . validateFunArgsNames
+
+expectNoVoidArgumentsM :: MonadError e m => [Arg] -> e -> m ()
+expectNoVoidArgumentsM = assertM . validateFunArgsTypes
 
 expectSimpleExprsM :: BNFC'Position -> [InternalType] -> [InternalType] -> EmptyCheckerM
 expectSimpleExprsM pos expTs allowedTs = do
