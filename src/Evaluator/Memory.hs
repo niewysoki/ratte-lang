@@ -1,19 +1,21 @@
 {-# LANGUAGE RecordWildCards #-}
 module Evaluator.Memory
-  ( Value(..)
-  , Memory
-  , emptyMemory
-  , retId
-  , entrypointId
-  , getValue
-  , putValue
-  , updateValue
-  , putEnv
-  , getEnv
-  , putArgVal
-  , putArgValsLocs
-  , getArgLoc
-  ) where
+  -- ( Value(..)
+  -- , Memory
+  -- , emptyMemory
+  -- , retId
+  -- , entrypointId
+  -- , getValue
+  -- , putValue
+  -- , hasValue
+  -- , updateValue
+  -- , putEnv
+  -- , getEnv
+  -- , putArgVal
+  -- , putArgValsLocs
+  -- , getArgLoc
+  -- ) 
+  where
 
 import           Control.Monad    (liftM2)
 import qualified Data.Map         as M
@@ -72,6 +74,9 @@ putEnv env' mem = mem {_env = env'}
 
 getEnv :: Memory -> Env
 getEnv = _env
+
+hasValue :: Ident -> Memory -> Bool
+hasValue = (. _env) . M.member
 
 putArgVal :: (Arg, Value, ArgSource) -> Memory -> Memory
 putArgVal (IArg _ ident _, val, _)           = putValue ident val

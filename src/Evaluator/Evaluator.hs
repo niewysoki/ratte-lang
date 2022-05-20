@@ -3,6 +3,8 @@ module Evaluator.Evaluator (eval) where
 import           Common.BuiltIn       (evalBuiltIn, isBuiltIn)
 import           Control.Monad.Except (MonadError (throwError), runExceptT)
 import           Control.Monad.State  (evalStateT, gets, modify)
+import           Data.List
+import           Data.Map
 import           Evaluator.Exceptions
 import           Evaluator.Memory
 import           Evaluator.Monads
@@ -155,8 +157,9 @@ guardReturn computation = do
   if ret then computation else return ValEmpty
 
 guardBuiltIn :: [Expr] -> Ident -> EvalM -> EvalM
-guardBuiltIn argExps ident computation = 
-  if isBuiltIn ident
+guardBuiltIn argExps ident computation = do
+  unshadowed <- gets $ not . hasValue ident
+  if isBuiltIn ident && unshadowed
   then mapM evalM argExps >>= evalBuiltIn ident
   else computation
 
