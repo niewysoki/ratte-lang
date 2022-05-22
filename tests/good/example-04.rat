@@ -2,5 +2,6 @@ fn Main () -> Void {
   Println("napis");
   Println(ShowInt(5));
   Println(ShowBoolean(True));
+  Println(Concat("liczba: ", ShowInt(5)));
   return;
 }
