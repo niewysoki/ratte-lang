@@ -81,7 +81,7 @@ for example in tests/bad/*.rat; do
     echo -e "    [stderr WA]"
   fi
 
-  if [[ $good_res == 1 && $good_err == 1 && $good_out == 1 ]]; then
+  if [[ $bad_res == 1 && $bad_err == 1 && $bad_out == 1 ]]; then
     ((bad_passed=bad_passed+1))
   fi
   ((bad_count=bad_count+1))
