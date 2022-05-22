@@ -1,0 +1,7 @@
+fn BadArgs(x: fn (Int, Void) -> Void) -> Void {
+  return;
+}
+
+fn Main () -> Void {
+  return;
+}
