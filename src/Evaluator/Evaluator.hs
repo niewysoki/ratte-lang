@@ -21,7 +21,7 @@ instance Eval Program where
 
 instance Eval Init where
   evalM (IFn _ ident args _ block) = do
-    fun <- gets $ ValFunction args block . getEnv
+    fun <- gets $ ValFunction ident args block . getEnv
     modify $ putValue ident fun
 
   evalM (IVarInf _ ident exp) = do
@@ -101,7 +101,7 @@ evalE (EAdd _ exp1 (OMinus _) exp2) = evalIntToIntOp (-) exp1 exp2
 evalE (EMul _ exp1 (OTimes _) exp2) = evalIntToIntOp (*) exp1 exp2
 evalE (EMul _ exp1 (OMod _) exp2)   = evalIntToIntOp mod exp1 exp2
 evalE (EVar _ name)                 = gets (getValue name)
-evalE (ELambda _ args _ block)      = gets (ValFunction args block . getEnv)
+evalE (ELambda _ args _ block)      = gets (ValFunction lambdaId args block . getEnv)
 evalE (EMul p exp1 (ODiv _) exp2)   = do
   (ValInt x1) <- evalE exp1
   (ValInt x2) <- evalE exp2
@@ -111,9 +111,9 @@ evalE (EMul p exp1 (ODiv _) exp2)   = do
 evalE (EApp _ ident argExps) = guardBuiltIn argExps ident . protectEnv $ do
   argVals <- mapM evalE argExps
   argSrcs <- gets $ mapM getArgLoc argExps
-  fun@(ValFunction funArgs funBlock funEnv) <- gets $ getValue ident
+  fun@(ValFunction realIdent funArgs funBlock funEnv) <- gets $ getValue ident
   modify $ putEnv funEnv
-  modify $ putValue ident fun
+  modify $ putValue realIdent fun
   modify $ putValue retId ValEmpty
   modify $ putArgValsLocs $ zip3 funArgs argVals argSrcs
   evalM funBlock

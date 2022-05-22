@@ -5,6 +5,7 @@ module Evaluator.Memory
   , emptyMemory
   , retId
   , entrypointId
+  , lambdaId
   , getValue
   , putValue
   , hasValue
@@ -27,7 +28,7 @@ data Value
   | ValInt Integer
   | ValBool Bool
   | ValStr String
-  | ValFunction [Arg] Block Env deriving Show
+  | ValFunction Ident [Arg] Block Env deriving Show
 
 instance Eq Value where
   ValInt x == ValInt x' = x == x'
@@ -50,9 +51,10 @@ data Memory = Mem
 emptyMemory :: Memory
 emptyMemory = Mem M.empty M.empty 0
 
-retId, entrypointId :: Ident
+retId, entrypointId, lambdaId :: Ident
 retId = Ident "return"
 entrypointId = Ident "Main"
+lambdaId = Ident ""
 
 getValue :: Ident -> Memory -> Value
 getValue = liftM2 (M.!) _store . getLoc

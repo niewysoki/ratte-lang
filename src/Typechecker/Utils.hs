@@ -1,7 +1,6 @@
 module Typechecker.Utils
   ( assertM
   , doNestedChecking
-  , doNestedCheckingWithReturn
   , initGetIdent
   , initGetPos
   , getArgIdent
@@ -16,11 +15,8 @@ import           Generated.Syntax
 import           Typechecker.Memory
 import           Typechecker.Monads
 
-doNestedChecking :: CheckerM a -> CheckerM a
-doNestedChecking = (fst <$>) . doNestedCheckingWithReturn
-
-doNestedCheckingWithReturn :: CheckerM a -> CheckerM (a, Bool)
-doNestedCheckingWithReturn checking = do
+doNestedChecking :: CheckerM a -> CheckerM (a, Bool)
+doNestedChecking checking = do
   mem <- get
   modify setOuterEnv
   res <- checking

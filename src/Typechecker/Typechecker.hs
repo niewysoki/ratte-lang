@@ -61,7 +61,7 @@ instance Checker Stmt where
   checkM _ s@(SEmpty _) = return s
 
   checkM retT (SBStmt pos block) = do
-    block' <- doNestedChecking $ checkM retT block
+    (block', _) <- doNestedChecking $ checkM retT block
     return $ SBStmt pos block'
 
   checkM retT (SInit pos init) = do
@@ -79,21 +79,21 @@ instance Checker Stmt where
   checkM retT (SCond pos cond block) = do
     (t, _) <- evalM cond
     assertM (t == ITBool) $ TypeMismatchE pos t ITBool
-    block' <- doNestedChecking $ checkM retT block
+    (block', _) <- doNestedChecking $ checkM retT block
     return $ SCond pos cond block'
 
   checkM retT (SCondElse pos cond blockT blockF) = do
     (t, _) <- evalM cond
     assertM (t == ITBool) $ TypeMismatchE pos t ITBool
-    (blockT', hasReturnT) <- doNestedCheckingWithReturn $ checkM retT blockT
-    (blockF', hasReturnF) <- doNestedCheckingWithReturn $ checkM retT blockF
+    (blockT', hasReturnT) <- doNestedChecking $ checkM retT blockT
+    (blockF', hasReturnF) <- doNestedChecking $ checkM retT blockF
     when (hasReturnT && hasReturnF) $ modify setReturn
     return $ SCondElse pos cond blockT' blockF'
 
   checkM retT (SWhile pos cond block) = do
     (t, _) <- evalM cond
     assertM (t == ITBool) $ TypeMismatchE pos t ITBool
-    block' <- doNestedChecking $ checkM retT block
+    (block', _) <- doNestedChecking $ checkM retT block
     return $ SWhile pos cond block'
 
   checkM _ s@(SExp pos exp) = do
@@ -153,9 +153,9 @@ instance Eval Expr where
     return (funT, Imm)
 
 checkFunctionBodyM :: Checker a => BNFC'Position -> InternalType -> [(Ident, ValueType)] -> a -> CheckerM a
-checkFunctionBodyM pos retT args block = doNestedChecking $ do
+checkFunctionBodyM pos retT args block = (fst <$>) . doNestedChecking $ do
   modify $ addTypes args
-  (block', ret) <- doNestedCheckingWithReturn $ checkM (Just retT) block
+  (block', ret) <- doNestedChecking $ checkM (Just retT) block
   assertM ret $ NoReturnStatementE pos
   return block'
 
